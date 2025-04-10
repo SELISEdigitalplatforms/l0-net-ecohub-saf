@@ -20,20 +20,15 @@ dotnet add package SeliseBlocks.Ecohub.SAF
 Before using `SeliseBlocks.Ecohub.SAF`, ensure that all required dependencies are registered in your application's dependency injection container. Add the following line in your `Program.cs`:
 
 use below methods
-to Retrieve all SAF receivers which are available to the caller
+to retrieve the bearer token use below method of the interface `ISafAuthService`
 
 ```csharp
-RetrieveTechUserCredentials();
+GetBearerToken(SafBearerTokenRequest request);
 ```
 
-to Retrieve a list of all insurers in SAF along with the standards they support
+to retrieve a list of all receivers use below method of the interface `ISafDriverService`
 
 ```csharp
-RetrieveSafReceivers();
+GetReceiversAsync(SafReceiversRequest request);
 ```
 
-to Retrieve techUser credentials for SAF
-
-```csharp
-RetrieveSafInsurers();
-```
