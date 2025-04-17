@@ -25,4 +25,25 @@ public interface ISafDriverService
     /// </returns>
     Task<SafReceiversResponse> GetReceiversAsync(SafReceiversRequest request);
 
+
+    /// <summary>
+    /// Asynchronously retrieves the public key of a member from the SAF API.
+    /// This method sends a request to the SAF API to get the public key of a member based on the provided IDP number.
+    /// </summary>
+    /// <param name="bearerToken">
+    /// The bearer token obtained from the SAF API after successful authentication.
+    /// This token is used to authorize the request to retrieve the member's public key.
+    /// </param>
+    /// <param name="idpNumber">
+    /// The IDP number of the member whose public key is being requested.
+    /// This number is used to identify the member in the SAF API.
+    /// </param>
+    /// <returns>
+    /// A Task of type SafMemberPublicKeyResponse, which contains the public key of the member retrieved from the SAF API.
+    /// The method may throw exceptions if there are issues with the request or response, such as HttpRequestException or JsonException.
+    /// </returns>
+    Task<SafMemberPublicKeyResponse> GetMemberPublicKey(string bearerToken, string idpNumber);
+
+
+
 }

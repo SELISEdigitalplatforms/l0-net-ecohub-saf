@@ -4,7 +4,6 @@ namespace SeliseBlocks.Ecohub.Saf.Models.RequestModels;
 
 public class SafReceiversRequest
 {
-    public string RequestUrl { get; set; } = string.Empty;
     public string BearerToken { get; set; } = string.Empty;
     public SafReceiversRequestBody Body { get; set; } = new SafReceiversRequestBody();
 
