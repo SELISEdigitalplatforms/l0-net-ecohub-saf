@@ -5,10 +5,10 @@ namespace SeliseBlocks.Ecohub.Saf.Models.RequestModels;
 public class SafReceiversRequest
 {
     public string BearerToken { get; set; } = string.Empty;
-    public SafReceiversRequestBody Body { get; set; } = new SafReceiversRequestBody();
+    public SafReceiversRequestPayload Payload { get; set; } = new SafReceiversRequestPayload();
 
 }
-public class SafReceiversRequestBody
+public class SafReceiversRequestPayload
 {
     public string LicenceKey { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;

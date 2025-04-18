@@ -15,10 +15,11 @@ internal class SafDriverService : ISafDriverService
     public async Task<SafReceiversResponse> GetReceiversAsync(SafReceiversRequest request)
     {
 
-        var response = await _httpRequestGateway.PostAsync<SafReceiversRequestBody, SafReceiversResponse>(
+        var response = await _httpRequestGateway.PostAsync<SafReceiversRequestPayload, SafReceiversResponse>(
             SafDriverConstant.GetReceiversEndpoint,
-            request.BearerToken,
-            request.Body);
+            request.Payload,
+            null,
+            request.BearerToken);
 
         return response;
     }
@@ -40,7 +41,38 @@ internal class SafDriverService : ISafDriverService
         var endpoint = SafDriverConstant.GetMemberPublicKeyEndpoint.Replace("{idpNumber}", idpNumber);
         var response = await _httpRequestGateway.GetAsync<SafMemberPublicKeyResponse>(
             endpoint,
+            null,
             bearerToken);
+
+        return response;
+    }
+
+    public async Task<SafSendOfferNlpiEventResponse> SendOfferNlpiEventAsync(SafSendOfferNlpiEventRequest request)
+    {
+        var header = new Dictionary<string, string>
+        {
+            { "schemaVersionId", request.SchemaVersionId },
+            { "keySchemaVersionId", request.KeySchemaVersionId }
+        };
+        var response = await _httpRequestGateway.PostAsync<SafOfferNlpiEvent, SafSendOfferNlpiEventResponse>(
+            SafDriverConstant.SendOfferNlpiEventEndpoint,
+            request.EventPayload,
+            header,
+            request.BearerToken);
+
+        return response;
+    }
+    public async Task<SafReceiveOfferNlpiEventResponse> ReceiveOfferNlpiEventAsync(SafReceiveOfferNlpiEventRequest request)
+    {
+        var endpoint = SafDriverConstant.ReceiveOfferNlpiEventEndpoint.Replace("{ecohubId}", request.EcohubId);
+        var header = new Dictionary<string, string>
+        {
+            { "auto.offset.reset", request.AutoOffsetReset }
+        };
+        var response = await _httpRequestGateway.GetAsync<SafReceiveOfferNlpiEventResponse>(
+            endpoint,
+            header,
+            request.BearerToken);
 
         return response;
     }

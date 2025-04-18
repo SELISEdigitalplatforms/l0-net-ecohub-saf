@@ -45,5 +45,11 @@ public interface ISafDriverService
     Task<SafMemberPublicKeyResponse> GetMemberPublicKey(string bearerToken, string idpNumber);
 
 
+    Task<SafSendOfferNlpiEventResponse> SendOfferNlpiEventAsync(SafSendOfferNlpiEventRequest request);
+
+    Task<SafReceiveOfferNlpiEventResponse> ReceiveOfferNlpiEventAsync(SafReceiveOfferNlpiEventRequest request);
+
+
+
 
 }
