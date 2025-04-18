@@ -1,13 +1,14 @@
 using System;
+using System.Security.Cryptography;
 using SeliseBlocks.Ecohub.Saf.Models.RequestModels;
 
 namespace SeliseBlocks.Ecohub.Saf;
 
-internal class SafDriverService : ISafDriverService
+internal class SafApiService : ISafApiService
 {
     private readonly IHttpRequestGateway _httpRequestGateway;
 
-    public SafDriverService(IHttpRequestGateway httpRequestGateway)
+    public SafApiService(IHttpRequestGateway httpRequestGateway)
     {
         _httpRequestGateway = httpRequestGateway;
     }
@@ -47,33 +48,4 @@ internal class SafDriverService : ISafDriverService
         return response;
     }
 
-    public async Task<SafSendOfferNlpiEventResponse> SendOfferNlpiEventAsync(SafSendOfferNlpiEventRequest request)
-    {
-        var header = new Dictionary<string, string>
-        {
-            { "schemaVersionId", request.SchemaVersionId },
-            { "keySchemaVersionId", request.KeySchemaVersionId }
-        };
-        var response = await _httpRequestGateway.PostAsync<SafOfferNlpiEvent, SafSendOfferNlpiEventResponse>(
-            SafDriverConstant.SendOfferNlpiEventEndpoint,
-            request.EventPayload,
-            header,
-            request.BearerToken);
-
-        return response;
-    }
-    public async Task<SafReceiveOfferNlpiEventResponse> ReceiveOfferNlpiEventAsync(SafReceiveOfferNlpiEventRequest request)
-    {
-        var endpoint = SafDriverConstant.ReceiveOfferNlpiEventEndpoint.Replace("{ecohubId}", request.EcohubId);
-        var header = new Dictionary<string, string>
-        {
-            { "auto.offset.reset", request.AutoOffsetReset }
-        };
-        var response = await _httpRequestGateway.GetAsync<SafReceiveOfferNlpiEventResponse>(
-            endpoint,
-            header,
-            request.BearerToken);
-
-        return response;
-    }
 }

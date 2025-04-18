@@ -6,7 +6,7 @@ namespace SeliseBlocks.Ecohub.Saf;
 /// <summary>
 /// Interface for the ISafDriverService, which provides methods to interact with the SAF API.
 /// </summary>
-public interface ISafDriverService
+public interface ISafApiService
 {
     /// <summary>
     /// Asynchronously retrieves receiver information from the SAF API.
@@ -43,13 +43,6 @@ public interface ISafDriverService
     /// The method may throw exceptions if there are issues with the request or response, such as HttpRequestException or JsonException.
     /// </returns>
     Task<SafMemberPublicKeyResponse> GetMemberPublicKey(string bearerToken, string idpNumber);
-
-
-    Task<SafSendOfferNlpiEventResponse> SendOfferNlpiEventAsync(SafSendOfferNlpiEventRequest request);
-
-    Task<SafReceiveOfferNlpiEventResponse> ReceiveOfferNlpiEventAsync(SafReceiveOfferNlpiEventRequest request);
-
-
 
 
 }

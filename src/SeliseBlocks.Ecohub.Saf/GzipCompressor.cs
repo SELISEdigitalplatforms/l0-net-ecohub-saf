@@ -22,4 +22,12 @@ internal static class GzipCompressor
         using var reader = new StreamReader(gzip, Encoding.UTF8);
         return reader.ReadToEnd();
     }
+    public static byte[] DecompressToBytes(byte[] compressedData)
+    {
+        using var compressedStream = new MemoryStream(compressedData);
+        using var gzip = new GZipStream(compressedStream, CompressionMode.Decompress);
+        using var decompressedStream = new MemoryStream();
+        gzip.CopyTo(decompressedStream);
+        return decompressedStream.ToArray();
+    }
 }
