@@ -30,7 +30,6 @@ internal class HttpRequestGateway : IHttpRequestGateway
                ?? throw new InvalidOperationException("Failed to deserialize response.");
     }
 
-    // POST implementation (supports JSON, form-urlencoded, etc.)
     public async Task<TResponse> PostAsync<TRequest, TResponse>(
         string endpoint,
         TRequest body,
@@ -42,8 +41,34 @@ internal class HttpRequestGateway : IHttpRequestGateway
     where TResponse : class
     {
         var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
-        AddHeaders(request, headers, bearerToken);
+        return await PostAsync<TRequest, TResponse>(request, body, headers, bearerToken, contentType);
+    }
 
+    public async Task<TResponse> PostAsync<TRequest, TResponse>(
+        Uri url,
+        TRequest body,
+        Dictionary<string, string>? headers = null,
+        string? bearerToken = null,
+        string? contentType = "application/json"
+    )
+    where TRequest : class
+    where TResponse : class
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, url);
+        return await PostAsync<TRequest, TResponse>(request, body, headers, bearerToken, contentType);
+
+    }
+    private async Task<TResponse> PostAsync<TRequest, TResponse>(
+        HttpRequestMessage request,
+        TRequest body,
+        Dictionary<string, string>? headers = null,
+        string? bearerToken = null,
+        string? contentType = "application/json"
+    )
+    where TRequest : class
+    where TResponse : class
+    {
+        AddHeaders(request, headers, bearerToken);
         // Handle different content types
         request.Content = contentType switch
         {
