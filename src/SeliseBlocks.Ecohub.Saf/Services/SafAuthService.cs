@@ -34,7 +34,8 @@ internal class SafAuthService : ISafAuthService
                             { "client_secret", request.Body.ClientSecret },
                             { "scope", request.Body.Scope }
                         };
-        var response = await _httpRequestGateway.PostFormUrlEncodedAsync<SafBearerTokenResponse>(request.RequestUrl, formData);
+        var response = await _httpRequestGateway.PostAsync<Dictionary<string, string>, SafBearerTokenResponse>(
+            request.RequestUrl, formData, null, string.Empty, "application/x-www-form-urlencoded");
 
         return response;
     }

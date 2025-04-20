@@ -1,4 +1,5 @@
 using System;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
@@ -13,54 +14,103 @@ internal class HttpRequestGateway : IHttpRequestGateway
         _httpClient = httpClient;
     }
 
-    public async Task<TResponse> PostAsync<TRequest, TResponse>(string requestUrl, string bearerToken, TRequest request)
+    public async Task<TResponse> GetAsync<TResponse>(
+        string endpoint,
+        Dictionary<string, string>? headers = null,
+        string? bearerToken = null
+    ) where TResponse : class
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
+        AddHeaders(request, headers, bearerToken);
+
+        var response = await _httpClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<TResponse>()
+               ?? throw new InvalidOperationException("Failed to deserialize response.");
+    }
+
+    public async Task<TResponse> PostAsync<TRequest, TResponse>(
+        string endpoint,
+        TRequest body,
+        Dictionary<string, string>? headers = null,
+        string? bearerToken = null,
+        string? contentType = "application/json"
+    )
     where TRequest : class
     where TResponse : class
     {
-        _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", bearerToken);
-        try
+        var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+        return await PostAsync<TRequest, TResponse>(request, body, headers, bearerToken, contentType);
+    }
+
+    public async Task<TResponse> PostAsync<TRequest, TResponse>(
+        Uri url,
+        TRequest body,
+        Dictionary<string, string>? headers = null,
+        string? bearerToken = null,
+        string? contentType = "application/json"
+    )
+    where TRequest : class
+    where TResponse : class
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, url);
+        return await PostAsync<TRequest, TResponse>(request, body, headers, bearerToken, contentType);
+
+    }
+    private async Task<TResponse> PostAsync<TRequest, TResponse>(
+        HttpRequestMessage request,
+        TRequest body,
+        Dictionary<string, string>? headers = null,
+        string? bearerToken = null,
+        string? contentType = "application/json"
+    )
+    where TRequest : class
+    where TResponse : class
+    {
+        AddHeaders(request, headers, bearerToken);
+        // Handle different content types
+        request.Content = contentType switch
         {
-            var response = await _httpClient.PostAsJsonAsync(requestUrl, request);
-            response.EnsureSuccessStatusCode();
-            var tokenResponse = await response.Content.ReadFromJsonAsync<TResponse>();
-            return tokenResponse ?? throw new Exception("Failed to deserialize bearer token response.");
+            "application/json" => JsonContent.Create(body),
+            "application/x-www-form-urlencoded" => new FormUrlEncodedContent(
+                body as Dictionary<string, string>
+                ?? throw new ArgumentException("Body must be Dictionary<string, string> for form-urlencoded")
+            ),
+            _ => new StringContent(
+                body?.ToString() ?? string.Empty,
+                Encoding.UTF8,
+                contentType!
+            )
+        };
+
+        var response = await _httpClient.SendAsync(request);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<TResponse>()
+               ?? throw new InvalidOperationException("Failed to deserialize response.");
+    }
+
+    // Helper to add headers/bearer token
+    private void AddHeaders(
+        HttpRequestMessage request,
+        Dictionary<string, string>? headers,
+        string? bearerToken
+    )
+    {
+        if (bearerToken != null)
+        {
+            request.Headers.Authorization =
+                new AuthenticationHeaderValue("Bearer", bearerToken);
         }
-        catch (HttpRequestException ex)
+
+        if (headers != null)
         {
-            throw new Exception($"Error on http request: {ex.Message}", ex);
-        }
-        catch (JsonException ex)
-        {
-            throw new Exception($"Error deserializing response: {ex.Message}", ex);
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"An unexpected error occurred: {ex.Message}", ex);
+            foreach (var header in headers)
+            {
+                request.Headers.Add(header.Key, header.Value);
+            }
         }
     }
 
-    public async Task<TResponse> PostFormUrlEncodedAsync<TResponse>(string requestUrl, Dictionary<string, string> request)
-    where TResponse : class
-    {
-        var content = new FormUrlEncodedContent(request);
-        try
-        {
-            var response = await _httpClient.PostAsync(requestUrl, content);
-            response.EnsureSuccessStatusCode();
-            var tokenResponse = await response.Content.ReadFromJsonAsync<TResponse>();
-            return tokenResponse ?? throw new Exception("Failed to deserialize bearer token response.");
-        }
-        catch (HttpRequestException ex)
-        {
-            throw new Exception($"Error on http request: {ex.Message}", ex);
-        }
-        catch (JsonException ex)
-        {
-            throw new Exception($"Error deserializing response: {ex.Message}", ex);
-        }
-        catch (Exception ex)
-        {
-            throw new Exception($"An unexpected error occurred: {ex.Message}", ex);
-        }
-    }
 }
