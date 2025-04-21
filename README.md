@@ -55,7 +55,7 @@ Task<SafBearerTokenResponse> GetBearerToken(SafBearerTokenRequest request);
     - `RequestUrl`: The endpoint for obtaining the token.
     - `Body`: Includes authentication details such as `grantType`, `clientId`, `clientSecret`, and `scope`.
 
-- **Returns**: A `SafBearerTokenResponse` object containing the bearer token and related information.
+- **Returns**: A `SafBearerTokenResponse` object containing the bearer token and related metadata.
 
 **Example**:
 
@@ -87,13 +87,46 @@ The `ISafApiService` interface provides methods for interacting with the SAF API
 To retrieve a list of receivers, use the `GetReceiversAsync` method:
 
 ```csharp
-Task<SafReceiversResponse> GetReceiversAsync(SafReceiversRequest request);
+Task<IEnumerable<SafReceiversResponse>> GetReceiversAsync(SafReceiversRequest request);
 ```
 
 - **Parameters**:
-  - `SafReceiversRequest`: Contains the request details for retrieving receiver information.
+  - `SafReceiversRequest`: Contains the bearer token and payload for retrieving receiver information.
+    - `Payload` includes:
+      - `LicenceKey`: The licence key for authentication.
+      - `Password`: The password for authentication.
+      - `RequestId`: A unique identifier for the request.
+      - `RequestTime`: The timestamp of the request.
+      - `UserAgent`: Information about the user agent making the request.
 
-- **Returns**: A `SafReceiversResponse` object containing the list of receivers.
+- **Returns**: A collection of `SafReceiversResponse` objects containing information about the receivers.
+
+**Example**:
+
+```csharp
+var receiversRequest = new SafReceiversRequest
+{
+    BearerToken = "your-bearer-token",
+    Payload = new SafReceiversRequestPayload
+    {
+        LicenceKey = "your-licence-key",
+        Password = "your-password",
+        RequestId = Guid.NewGuid().ToString(),
+        RequestTime = DateTime.UtcNow.ToString("o"),
+        UserAgent = new SafUserAgent
+        {
+            Name = "Chrome",
+            Version = "Desktop"
+        }
+    }
+};
+
+var receiversResponse = await apiService.GetReceiversAsync(receiversRequest);
+foreach (var receiver in receiversResponse)
+{
+    Console.WriteLine($"Company Name: {receiver.CompanyName}");
+}
+```
 
 #### Retrieve Member Public Key
 
@@ -107,7 +140,7 @@ Task<SafMemberPublicKeyResponse> GetMemberPublicKey(string bearerToken, string i
   - `bearerToken`: The authentication token.
   - `idpNumber`: The IDP number of the member.
 
-- **Returns**: A `SafMemberPublicKeyResponse` object containing the member's public key.
+- **Returns**: A `SafMemberPublicKeyResponse` object containing the member's public key and related metadata.
 
 **Example**:
 
@@ -165,13 +198,13 @@ Console.WriteLine($"Schema ID: {sendResponse.ValueSchemaId}");
 To receive an offer NLPI event, use the `ReceiveOfferNlpiEventAsync` method:
 
 ```csharp
-Task<SafOfferNlpiEvent> ReceiveOfferNlpiEventAsync(SafReceiveOfferNlpiEventRequest request);
+Task<IEnumerable<SafOfferNlpiEvent>> ReceiveOfferNlpiEventAsync(SafReceiveOfferNlpiEventRequest request);
 ```
 
 - **Parameters**:
   - `SafReceiveOfferNlpiEventRequest`: Contains the bearer token, Ecohub ID, offset reset configuration, and private key.
 
-- **Returns**: A `SafOfferNlpiEvent` object containing the details of the received event.
+- **Returns**: A collection of `SafOfferNlpiEvent` objects containing the details of the received events.
 
 **Example**:
 
@@ -184,8 +217,11 @@ var receiveRequest = new SafReceiveOfferNlpiEventRequest
     PrivateKey = "your-private-key"
 };
 
-var receivedEvent = await eventService.ReceiveOfferNlpiEventAsync(receiveRequest);
-Console.WriteLine($"Event ID: {receivedEvent.Id}");
+var receivedEvents = await eventService.ReceiveOfferNlpiEventAsync(receiveRequest);
+foreach (var receivedEvent in receivedEvents)
+{
+    Console.WriteLine($"Event ID: {receivedEvent.Id}");
+}
 ```
 
 ---
