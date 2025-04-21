@@ -22,11 +22,11 @@ public class BaseSafOfferNlpiEvent
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string Type { get; set; }
 
-    [JsonPropertyName("dataContentType")]
+    [JsonPropertyName("datacontenttype")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string DataContentType { get; set; }
 
-    [JsonPropertyName("dataSchema")]
+    [JsonPropertyName("dataschema")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string DataSchema { get; set; }
 

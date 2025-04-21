@@ -7,7 +7,7 @@ public class SafReceiversResponse
     public IEnumerable<string> Idp { get; set; } = new List<string>();
     public string CompanyName { get; set; } = string.Empty;
     public string MemberType { get; set; } = string.Empty;
-    public IEnumerable<SafSupportedStandard> SupportedStandards { get; set; } = new List<SafSupportedStandard>();
+    public IEnumerable<SafSupportedStandard> SafSupportedStandards { get; set; } = new List<SafSupportedStandard>();
 }
 
 public class SafSupportedStandard

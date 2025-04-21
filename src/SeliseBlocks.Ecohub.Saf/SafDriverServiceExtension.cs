@@ -14,7 +14,7 @@ public static class SafDriverServiceExtension
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection"/> to which the services will be added.</param>
     /// <param name="baseUrl">The base URL for the SAF API.</param>
-    public static void RegisterSafDriverServices(this IServiceCollection services, string baseUrl)
+    public static void AddSafDriverServices(this IServiceCollection services, string baseUrl)
     {
         // Registers an HTTP client for making requests to the SAF API.
         services.AddHttpClient<IHttpRequestGateway, HttpRequestGateway>(client =>

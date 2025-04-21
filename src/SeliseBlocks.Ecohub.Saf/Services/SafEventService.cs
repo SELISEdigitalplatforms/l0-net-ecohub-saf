@@ -1,6 +1,5 @@
 using System;
 using System.Security.Cryptography;
-using SeliseBlocks.Ecohub.Saf.Models.RequestModels;
 
 namespace SeliseBlocks.Ecohub.Saf;
 
@@ -31,23 +30,29 @@ internal class SafEventService : ISafEventService
 
         return response;
     }
-    public async Task<SafOfferNlpiEvent> ReceiveOfferNlpiEventAsync(SafReceiveOfferNlpiEventRequest request)
+    public async Task<IEnumerable<SafOfferNlpiEvent>> ReceiveOfferNlpiEventAsync(SafReceiveOfferNlpiEventRequest request)
     {
         var endpoint = SafDriverConstant.ReceiveOfferNlpiEventEndpoint.Replace("{ecohubId}", request.EcohubId);
         var header = new Dictionary<string, string>
         {
             { "auto.offset.reset", request.AutoOffsetReset }
         };
-        var response = await _httpRequestGateway.GetAsync<SafOfferNlpiEncryptedEvent>(
+        var eventResponses = await _httpRequestGateway.GetAsync<IEnumerable<SafReceiveOfferNlpiEventResponse>>(
             endpoint,
             header,
             request.BearerToken);
 
-        var eventResponse = response.MapToSafOfferNlpiEvent();
+        var events = new List<SafOfferNlpiEvent>();
+        foreach (var eventItem in eventResponses)
+        {
+            var eventResponse = eventItem.Value.MapToSafOfferNlpiEvent();
 
-        var data = GetDecompressAndDecryptEventData(response.Data, request.PrivateKey);
-        eventResponse.Data = data;
-        return eventResponse;
+            var data = GetDecompressAndDecryptEventData(eventItem.Value.Data, request.PrivateKey);
+            eventResponse.Data = data;
+            events.Add(eventResponse);
+        }
+
+        return events; ;
     }
 
     private SafEncryptedData GetCompressAndEncryptEventData(SafData data)

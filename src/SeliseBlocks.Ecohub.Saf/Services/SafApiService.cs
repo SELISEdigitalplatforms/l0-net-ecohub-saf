@@ -1,6 +1,5 @@
 using System;
 using System.Security.Cryptography;
-using SeliseBlocks.Ecohub.Saf.Models.RequestModels;
 
 namespace SeliseBlocks.Ecohub.Saf;
 
@@ -13,10 +12,10 @@ internal class SafApiService : ISafApiService
         _httpRequestGateway = httpRequestGateway;
     }
 
-    public async Task<SafReceiversResponse> GetReceiversAsync(SafReceiversRequest request)
+    public async Task<IEnumerable<SafReceiversResponse>> GetReceiversAsync(SafReceiversRequest request)
     {
 
-        var response = await _httpRequestGateway.PostAsync<SafReceiversRequestPayload, SafReceiversResponse>(
+        var response = await _httpRequestGateway.PostAsync<SafReceiversRequestPayload, IEnumerable<SafReceiversResponse>>(
             SafDriverConstant.GetReceiversEndpoint,
             request.Payload,
             null,

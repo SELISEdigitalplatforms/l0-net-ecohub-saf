@@ -20,14 +20,36 @@ internal class HttpRequestGateway : IHttpRequestGateway
         string? bearerToken = null
     ) where TResponse : class
     {
-        var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
-        AddHeaders(request, headers, bearerToken);
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
+            AddHeaders(request, headers, bearerToken);
 
-        var response = await _httpClient.SendAsync(request);
-        response.EnsureSuccessStatusCode();
+            var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
 
-        return await response.Content.ReadFromJsonAsync<TResponse>()
-               ?? throw new InvalidOperationException("Failed to deserialize response.");
+            var responseContent = await response.Content.ReadAsStringAsync();
+            if (string.IsNullOrWhiteSpace(responseContent) || responseContent == "[]" || responseContent == "{}")
+            {
+                return null!;
+            }
+
+            return JsonSerializer.Deserialize<TResponse>(responseContent)
+                   ?? throw new InvalidOperationException("Failed to deserialize response.");
+
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new InvalidOperationException("HTTP request failed.", ex);
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException("Failed to deserialize response.", ex);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("An unexpected error occurred.", ex);
+        }
     }
 
     public async Task<TResponse> PostAsync<TRequest, TResponse>(
@@ -68,27 +90,50 @@ internal class HttpRequestGateway : IHttpRequestGateway
     where TRequest : class
     where TResponse : class
     {
-        AddHeaders(request, headers, bearerToken);
-        // Handle different content types
-        request.Content = contentType switch
+        try
         {
-            "application/json" => JsonContent.Create(body),
-            "application/x-www-form-urlencoded" => new FormUrlEncodedContent(
-                body as Dictionary<string, string>
-                ?? throw new ArgumentException("Body must be Dictionary<string, string> for form-urlencoded")
-            ),
-            _ => new StringContent(
-                body?.ToString() ?? string.Empty,
-                Encoding.UTF8,
-                contentType!
-            )
-        };
+            AddHeaders(request, headers, bearerToken);
+            // Handle different content types
+            if (contentType == "application/x-www-form-urlencoded")
+            {
+                request.Content = new FormUrlEncodedContent(
+                    body as Dictionary<string, string>
+                    ?? throw new ArgumentException("Body must be Dictionary<string, string> for form-urlencoded"));
+                request.Content.Headers.ContentType = new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded");
+            }
+            else
+            {
+                request.Content = new StringContent(
+                    JsonSerializer.Serialize(body),
+                    Encoding.UTF8,
+                    "application/json"
+                );
+            }
 
-        var response = await _httpClient.SendAsync(request);
-        response.EnsureSuccessStatusCode();
+            var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
 
-        return await response.Content.ReadFromJsonAsync<TResponse>()
-               ?? throw new InvalidOperationException("Failed to deserialize response.");
+            var responseContent = await response.Content.ReadAsStringAsync();
+            if (string.IsNullOrWhiteSpace(responseContent) || responseContent == "[]" || responseContent == "{}")
+            {
+                return null!;
+            }
+
+            return await response.Content.ReadFromJsonAsync<TResponse>()
+                   ?? throw new InvalidOperationException("Failed to deserialize response.");
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new InvalidOperationException("HTTP request failed.", ex);
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException("Failed to deserialize response.", ex);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("An unexpected error occurred.", ex);
+        }
     }
 
     // Helper to add headers/bearer token
