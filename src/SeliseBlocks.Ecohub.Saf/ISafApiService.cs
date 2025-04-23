@@ -1,47 +1,59 @@
 using System;
-using SeliseBlocks.Ecohub.Saf.Models.RequestModels;
 
 namespace SeliseBlocks.Ecohub.Saf;
 
 /// <summary>
-/// Interface for the ISafDriverService, which provides methods to interact with the SAF API.
+/// Interface for interacting with the SAF API. 
+/// Provides methods to retrieve receiver information and member public keys.
 /// </summary>
 public interface ISafApiService
 {
     /// <summary>
     /// Asynchronously retrieves receiver information from the SAF API.
-    /// This method sends a request to the SAF API to get information about receivers based on the provided request parameters.
-    /// The request should include the necessary authentication details and any other required parameters.
     /// </summary>
     /// <param name="request">
-    /// The request object containing the URL and body for obtaining receiver information.
-    /// The body of the request should be of type SafReceiversRequestBody, which contains properties such as receiver ID, status, and other relevant information.
-    /// The request URL should be the endpoint for obtaining receiver information from the SAF API.
-    /// The bearer token should be the token obtained from the SAF API after successful authentication.
+    /// The request object containing the bearer token and payload for obtaining receiver information.
+    /// The payload includes details such as:
+    /// - <see cref="SafReceiversRequestPayload.LicenceKey"/>: The licence key for authentication.
+    /// - <see cref="SafReceiversRequestPayload.Password"/>: The password for authentication.
+    /// - <see cref="SafReceiversRequestPayload.RequestId"/>: A unique identifier for the request.
+    /// - <see cref="SafReceiversRequestPayload.RequestTime"/>: The timestamp of the request.
+    /// - <see cref="SafReceiversRequestPayload.UserAgent"/>: Information about the user agent making the request.
     /// </param>
     /// <returns>
-    /// A Task of type SafReceiversResponse, which contains the receiver information retrieved from the SAF API.
-    /// The method may throw exceptions if there are issues with the request or response, such as HttpRequestException or JsonException.
+    /// A task that represents the asynchronous operation. The task result contains a collection of 
+    /// <see cref="SafReceiversResponse"/> objects, which include information about the receivers.
     /// </returns>
-    Task<SafReceiversResponse> GetReceiversAsync(SafReceiversRequest request);
+    /// <exception cref="HttpRequestException">
+    /// Thrown if there is an issue with the HTTP request, such as a network error or invalid response.
+    /// </exception>
+    /// <exception cref="JsonException">
+    /// Thrown if there is an issue deserializing the response from the SAF API.
+    /// </exception>
+    Task<IEnumerable<SafReceiversResponse>> GetReceiversAsync(SafReceiversRequest request);
 
 
     /// <summary>
     /// Asynchronously retrieves the public key of a member from the SAF API.
-    /// This method sends a request to the SAF API to get the public key of a member based on the provided IDP number.
     /// </summary>
     /// <param name="bearerToken">
-    /// The bearer token obtained from the SAF API after successful authentication.
+    /// The bearer token obtained from the SAF API after successful authentication. 
     /// This token is used to authorize the request to retrieve the member's public key.
     /// </param>
     /// <param name="idpNumber">
-    /// The IDP number of the member whose public key is being requested.
-    /// This number is used to identify the member in the SAF API.
+    /// The IDP number of the member whose public key is being requested. 
+    /// This number uniquely identifies the member in the SAF API.
     /// </param>
     /// <returns>
-    /// A Task of type SafMemberPublicKeyResponse, which contains the public key of the member retrieved from the SAF API.
-    /// The method may throw exceptions if there are issues with the request or response, such as HttpRequestException or JsonException.
+    /// A task that represents the asynchronous operation. The task result contains a 
+    /// <see cref="SafMemberPublicKeyResponse"/> object, which includes the public key and related metadata of the member.
     /// </returns>
+    /// <exception cref="HttpRequestException">
+    /// Thrown if there is an issue with the HTTP request, such as a network error or invalid response.
+    /// </exception>
+    /// <exception cref="JsonException">
+    /// Thrown if there is an issue deserializing the response from the SAF API.
+    /// </exception>
     Task<SafMemberPublicKeyResponse> GetMemberPublicKey(string bearerToken, string idpNumber);
 
 

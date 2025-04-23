@@ -1,6 +1,7 @@
 using System;
+using System.Text.Json.Serialization;
 
-namespace SeliseBlocks.Ecohub.Saf.Models.RequestModels;
+namespace SeliseBlocks.Ecohub.Saf;
 
 public class SafReceiversRequest
 {
@@ -10,9 +11,17 @@ public class SafReceiversRequest
 }
 public class SafReceiversRequestPayload
 {
+
+    [JsonPropertyName("licenceKey")]
     public string LicenceKey { get; set; } = string.Empty;
+    [JsonPropertyName("password")]
     public string Password { get; set; } = string.Empty;
+    [JsonPropertyName("requestId")]
     public string RequestId { get; set; } = string.Empty;
-    public Object? UserAgent { get; set; }
+    [JsonPropertyName("requestTime")]
+    public string RequestTime { get; set; } = string.Empty;
+
+    [JsonPropertyName("UserAgent")]
+    public SafUserAgent UserAgent { get; set; }
 
 }

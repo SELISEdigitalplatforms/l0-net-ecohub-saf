@@ -3,17 +3,13 @@ using System.Text.Json.Serialization;
 
 namespace SeliseBlocks.Ecohub.Saf;
 
-internal class SafOfferNlpiEncryptedEvent : BaseSafOfferNlpiEvent
+public class SafOfferNlpiEncryptedEvent : BaseSafOfferNlpiEvent
 {
     [JsonPropertyName("data")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public SafEncryptedData Data { get; set; }
-
-    // [JsonPropertyName("dataBase64")]
-    // [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    // public string DataBase64 { get; set; }
 }
-internal class SafEncryptedData
+public class SafEncryptedData
 {
     [JsonPropertyName("payload")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
