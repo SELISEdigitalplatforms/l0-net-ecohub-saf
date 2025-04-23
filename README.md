@@ -1,3 +1,5 @@
+[![NuGet Version](https://img.shields.io/nuget/v/SeliseBlocks.Ecohub.SAF?style=flat-square)](https://www.nuget.org/packages/SeliseBlocks.Ecohub.SAF/1.0.0-beta.2)
+
 # SeliseBlocks.Ecohub.SAF
 
 ## Overview
@@ -223,11 +225,5 @@ foreach (var receivedEvent in receivedEvents)
     Console.WriteLine($"Event ID: {receivedEvent.Id}");
 }
 ```
-
----
-
-## Nuget Package
-
-[![NuGet](https://img.shields.io/nuget/v/SeliseBlocks.Ecohub.SAF?style=flat-square)](https://www.nuget.org/packages/SeliseBlocks.Ecohub.SAF/1.0.0-beta.2)
 
 ---
