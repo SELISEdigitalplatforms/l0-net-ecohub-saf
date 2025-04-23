@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 
 namespace SeliseBlocks.Ecohub.Saf;
 
-internal class SafApiService : ISafApiService
+public class SafApiService : ISafApiService
 {
     private readonly IHttpRequestGateway _httpRequestGateway;
 

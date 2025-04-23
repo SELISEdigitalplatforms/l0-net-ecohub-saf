@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace SeliseBlocks.Ecohub.Saf;
 
-internal class HttpRequestGateway : IHttpRequestGateway
+public class HttpRequestGateway : IHttpRequestGateway
 {
     private readonly HttpClient _httpClient;
     public HttpRequestGateway(HttpClient httpClient)

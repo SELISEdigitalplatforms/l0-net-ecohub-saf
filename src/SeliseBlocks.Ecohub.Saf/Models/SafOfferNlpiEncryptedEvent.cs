@@ -8,10 +8,6 @@ public class SafOfferNlpiEncryptedEvent : BaseSafOfferNlpiEvent
     [JsonPropertyName("data")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public SafEncryptedData Data { get; set; }
-
-    // [JsonPropertyName("dataBase64")]
-    // [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    // public string DataBase64 { get; set; }
 }
 public class SafEncryptedData
 {

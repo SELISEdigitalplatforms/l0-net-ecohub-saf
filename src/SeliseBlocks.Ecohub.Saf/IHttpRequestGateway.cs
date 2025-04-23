@@ -2,7 +2,7 @@ using System;
 
 namespace SeliseBlocks.Ecohub.Saf;
 
-internal interface IHttpRequestGateway
+public interface IHttpRequestGateway
 {
     Task<TResponse> PostAsync<TRequest, TResponse>(string endpoint
     , TRequest request

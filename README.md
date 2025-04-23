@@ -116,7 +116,7 @@ var receiversRequest = new SafReceiversRequest
         UserAgent = new SafUserAgent
         {
             Name = "Chrome",
-            Version = "Desktop"
+            Version = "126.0.6478.270"
         }
     }
 };

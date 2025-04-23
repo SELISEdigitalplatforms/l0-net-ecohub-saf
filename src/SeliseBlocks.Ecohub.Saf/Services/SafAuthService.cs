@@ -8,7 +8,7 @@ namespace SeliseBlocks.Ecohub.Saf;
 /// This class is responsible for handling authentication with the SAF API.
 /// It uses the HttpClient to send requests to the SAF API and retrieve bearer tokens.
 /// </summary>
-internal class SafAuthService : ISafAuthService
+public class SafAuthService : ISafAuthService
 {
     private readonly IHttpRequestGateway _httpRequestGateway;
 
