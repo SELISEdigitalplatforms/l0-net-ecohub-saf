@@ -11,8 +11,8 @@ public class SafEventServiceTests
     private readonly Mock<IHttpRequestGateway> _httpRequestGatewayMock;
     private readonly SafEventService _safEventService;
 
-    private const string _privateKey = "-----BEGIN RSA PRIVATE KEY-----\r\nMIIBOgIBAAJBAKj34GkxFhD90vcNLYLInFEX6Ppy1tPf9Cnzj4p4WGeKLs1Pt8Qu\r\nKUpRKfFLfRYC9AIKjbJTWit+CqvjWYzvQwECAwEAAQJAIJLixBy2qpFoS4DSmoEm\r\no3qGy0t6z09AIJtH+5OeRV1be+N4cDYJKffGzDa88vQENZiRm0GRq6a+HPGQMd2k\r\nTQIhAKMSvzIBnni7ot/OSie2TmJLY4SwTQAevXysE2RbFDYdAiEBCUEaRQnMnbp7\r\n9mxDXDf6AU0cN/RPBjb9qSHDcWZHGzUCIG2Es59z8ugGrDY+pxLQnwfotadxd+Uy\r\nv/Ow5T0q5gIJAiEAyS4RaI9YG8EWx/2w0T67ZUVAw8eOMB6BIUg0Xcu+3okCIBOs\r\n/5OiPgoTdSy7bcF9IGpSE8ZgGKzgYQVZeN97YE00\r\n-----END RSA PRIVATE KEY-----";
-    private const string _publicKey = "-----BEGIN RSA PUBLIC KEY-----\r\nMIIBCgKCAQEA+xGZ/wcz9ugFpP07Nspo6U17l0YhFiFpxxU4pTk3Lifz9R3zsIsu\r\nERwta7+fWIfxOo208ett/jhskiVodSEt3QBGh4XBipyWopKwZ93HHaDVZAALi/2A\r\n+xTBtWdEo7XGUujKDvC2/aZKukfjpOiUI8AhLAfjmlcD/UZ1QPh0mHsglRNCmpCw\r\nmwSXA9VNmhz+PiB+Dml4WWnKW/VHo2ujTXxq7+efMU4H2fny3Se3KYOsFPFGZ1TN\r\nQSYlFuShWrHPtiLmUdPoP6CV2mML1tk+l7DIIqXrQhLUKDACeM5roMx0kLhUWB8P\r\n+0uj1CNlNN4JRZlC7xFfqiMbFRU9Z4N6YwIDAQAB\r\n-----END RSA PUBLIC KEY-----";
+    private const string _testPrivateKey = "-----BEGIN RSA PRIVATE KEY-----\r\nMIIBOgIBAAJBAKj34GkxFhD90vcNLYLInFEX6Ppy1tPf9Cnzj4p4WGeKLs1Pt8Qu\r\nKUpRKfFLfRYC9AIKjbJTWit+CqvjWYzvQwECAwEAAQJAIJLixBy2qpFoS4DSmoEm\r\no3qGy0t6z09AIJtH+5OeRV1be+N4cDYJKffGzDa88vQENZiRm0GRq6a+HPGQMd2k\r\nTQIhAKMSvzIBnni7ot/OSie2TmJLY4SwTQAevXysE2RbFDYdAiEBCUEaRQnMnbp7\r\n9mxDXDf6AU0cN/RPBjb9qSHDcWZHGzUCIG2Es59z8ugGrDY+pxLQnwfotadxd+Uy\r\nv/Ow5T0q5gIJAiEAyS4RaI9YG8EWx/2w0T67ZUVAw8eOMB6BIUg0Xcu+3okCIBOs\r\n/5OiPgoTdSy7bcF9IGpSE8ZgGKzgYQVZeN97YE00\r\n-----END RSA PRIVATE KEY-----";
+    private const string _testPublicKey = "-----BEGIN RSA PUBLIC KEY-----\r\nMIIBCgKCAQEA+xGZ/wcz9ugFpP07Nspo6U17l0YhFiFpxxU4pTk3Lifz9R3zsIsu\r\nERwta7+fWIfxOo208ett/jhskiVodSEt3QBGh4XBipyWopKwZ93HHaDVZAALi/2A\r\n+xTBtWdEo7XGUujKDvC2/aZKukfjpOiUI8AhLAfjmlcD/UZ1QPh0mHsglRNCmpCw\r\nmwSXA9VNmhz+PiB+Dml4WWnKW/VHo2ujTXxq7+efMU4H2fny3Se3KYOsFPFGZ1TN\r\nQSYlFuShWrHPtiLmUdPoP6CV2mML1tk+l7DIIqXrQhLUKDACeM5roMx0kLhUWB8P\r\n+0uj1CNlNN4JRZlC7xFfqiMbFRU9Z4N6YwIDAQAB\r\n-----END RSA PUBLIC KEY-----";
 
     public SafEventServiceTests()
     {
@@ -37,7 +37,7 @@ public class SafEventServiceTests
                 Data = new SafData
                 {
                     Payload = new byte[] { 1, 2, 3 },
-                    PublicKey = _publicKey
+                    PublicKey = _testPublicKey
                 }
             }
         };
@@ -82,7 +82,7 @@ public class SafEventServiceTests
             BearerToken = "test-bearer-token",
             EcohubId = "test-ecohub-id",
             AutoOffsetReset = "earliest",
-            PrivateKey = _privateKey
+            PrivateKey = _testPrivateKey
         };
 
         var expectedResponse = new List<SafOfferNlpiEvent>
@@ -95,7 +95,7 @@ public class SafEventServiceTests
                 Data = new SafData
                 {
                     Payload = new byte[] { 1, 2, 3 },
-                    PublicKey = _publicKey
+                    PublicKey = _testPublicKey
                 }
             }
         };
