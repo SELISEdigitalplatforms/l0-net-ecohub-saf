@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SeliseBlocks.Ecohub.Saf;
 
-internal static class GzipCompressor
+public static class GzipCompressor
 {
     public static byte[] CompressBytes(byte[] data)
     {

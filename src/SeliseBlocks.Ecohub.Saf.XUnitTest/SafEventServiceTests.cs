@@ -9,10 +9,10 @@ namespace SeliseBlocks.Ecohub.Saf.XUnitTest;
 public class SafEventServiceTests
 {
     private readonly Mock<IHttpRequestGateway> _httpRequestGatewayMock;
+    private const string _testPublicKey = "-----BEGIN PRIVATE KEY-----MIIBUwIBADANBgkqhkiG9w0BAQEFAASCAT0wggE5AgEAAkEAu6vD4pfDJLCCygmiqGhnRotEmjx2Dx8edcCjfBAeh4QLQhI8paZpaiJSmSgnFkRjUvb8Dhd/GWzlOaqulY+NIQIDAQABAkAxng0RKIyoc55wqjF+EvRTG1kM6jVQdCrKeR8AGwbnTtb/DWyXsnzcO01Ik5TOY1M6+MqhChl3G8PDSJ46RPCtAiEA3RiaPz2y7TiXa6kh/MBn6oiPCP1ZGK2AtZRLPFCZl2sCIQDZTFDbbDCz9QX3lyRUWtpk7d1mHjFTEFEGXW32V2lsowIgPcfnKi7KdcEvhrT/O0pkf0PjfCaXI+8vnQ2wLE11bbsCIHYY1fEK8cU8K4wOZr45ymwEIsm3KxN70K1m5bZ2d2OFAiAvFNT/gmfDGu5p12+SyNh4xhZscLkMC4PSQKTK9/Krkw==-----END PRIVATE KEY-----";
+    private const string _testPrivateKey = "-----BEGIN PUBLIC KEY-----MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBALurw+KXwySwgsoJoqhoZ0aLRJo8dg8fHnXAo3wQHoeEC0ISPKWmaWoiUpkoJxZEY1L2/A4Xfxls5TmqrpWPjSECAwEAAQ==-----END PUBLIC KEY-----";
+    private const string _testAesKey = "MIIBUwIBADANBgkqhkiG9w0BAQEFAASCAT0wggE5AgEAAkEAu6vD4pfDJLCCygmiqGhnRotEmjx2Dx8edcCjfBAeh4QLQhI8paZpaiJSmSgnFkRjUvb8Dhd/GWzlOaqulY+NIQIDAQABAkAxng0RKIyoc55wqjF+EvRTG1kM6jVQdCrKeR8AGwbnTtb/DWyXsnzcO01Ik5TOY1M6+MqhChl3G8PDSJ46RPCtAiEA3RiaPz2y7TiXa6kh/MBn6oiPCP1ZGK2AtZRLPFCZl2sCIQDZTFDbbDCz9QX3lyRUWtpk7d1mHjFTEFEGXW32V2lsowIgPcfnKi7KdcEvhrT/O0pkf0PjfCaXI+8vnQ2wLE11bbsCIHYY1fEK8cU8K4wOZr45ymwEIsm3KxN70K1m5bZ2d2OFAiAvFNT/gmfDGu5p12+SyNh4xhZscLkMC4PSQKTK9/Krkw==";
     private readonly SafEventService _safEventService;
-
-    private const string _testPrivateKey = "-----BEGIN RSA PRIVATE KEY-----\r\nMIIBOgIBAAJBAKj34GkxFhD90vcNLYLInFEX6Ppy1tPf9Cnzj4p4WGeKLs1Pt8Qu\r\nKUpRKfFLfRYC9AIKjbJTWit+CqvjWYzvQwECAwEAAQJAIJLixBy2qpFoS4DSmoEm\r\no3qGy0t6z09AIJtH+5OeRV1be+N4cDYJKffGzDa88vQENZiRm0GRq6a+HPGQMd2k\r\nTQIhAKMSvzIBnni7ot/OSie2TmJLY4SwTQAevXysE2RbFDYdAiEBCUEaRQnMnbp7\r\n9mxDXDf6AU0cN/RPBjb9qSHDcWZHGzUCIG2Es59z8ugGrDY+pxLQnwfotadxd+Uy\r\nv/Ow5T0q5gIJAiEAyS4RaI9YG8EWx/2w0T67ZUVAw8eOMB6BIUg0Xcu+3okCIBOs\r\n/5OiPgoTdSy7bcF9IGpSE8ZgGKzgYQVZeN97YE00\r\n-----END RSA PRIVATE KEY-----";
-    private const string _testPublicKey = "-----BEGIN RSA PUBLIC KEY-----\r\nMIIBCgKCAQEA+xGZ/wcz9ugFpP07Nspo6U17l0YhFiFpxxU4pTk3Lifz9R3zsIsu\r\nERwta7+fWIfxOo208ett/jhskiVodSEt3QBGh4XBipyWopKwZ93HHaDVZAALi/2A\r\n+xTBtWdEo7XGUujKDvC2/aZKukfjpOiUI8AhLAfjmlcD/UZ1QPh0mHsglRNCmpCw\r\nmwSXA9VNmhz+PiB+Dml4WWnKW/VHo2ujTXxq7+efMU4H2fny3Se3KYOsFPFGZ1TN\r\nQSYlFuShWrHPtiLmUdPoP6CV2mML1tk+l7DIIqXrQhLUKDACeM5roMx0kLhUWB8P\r\n+0uj1CNlNN4JRZlC7xFfqiMbFRU9Z4N6YwIDAQAB\r\n-----END RSA PUBLIC KEY-----";
 
     public SafEventServiceTests()
     {
@@ -57,12 +57,11 @@ public class SafEventServiceTests
         };
 
         _httpRequestGatewayMock
-            .Setup(x => x.PostAsync<SafOfferNlpiEvent, SafSendOfferNlpiEventResponse>(
+            .Setup(x => x.PostAsync<SafOfferNlpiEncryptedEvent, SafSendOfferNlpiEventResponse>(
                 It.IsAny<string>(),
-                request.EventPayload,
-                null,
-                request.BearerToken,
-                "application/json"))
+                It.IsAny<SafOfferNlpiEncryptedEvent>(),
+                It.IsAny<Dictionary<string, string>>(),
+                request.BearerToken, "application/json"))
             .ReturnsAsync(expectedResponse);
 
         // Act
@@ -71,6 +70,10 @@ public class SafEventServiceTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(1, result.KeySchemaId);
+        Assert.Equal(1, result.ValueSchemaId);
+        Assert.Single(result.Offsets);
+        Assert.Equal(0, result.Offsets.First().Partition);
+        Assert.Equal(1, result.Offsets.First().Offset);
     }
 
     [Fact]
@@ -85,28 +88,30 @@ public class SafEventServiceTests
             PrivateKey = _testPrivateKey
         };
 
-        var expectedResponse = new List<SafOfferNlpiEvent>
+        var expectedResponse = new List<SafReceiveOfferNlpiEventResponse>
+    {
+        new SafReceiveOfferNlpiEventResponse
         {
-            new SafOfferNlpiEvent
+            Value = new SafOfferNlpiEncryptedEvent
             {
                 Id = "event-id",
                 Source = "source",
                 Type = "type",
-                Data = new SafData
+                Data = new SafEncryptedData
                 {
-                    Payload = new byte[] { 1, 2, 3 },
-                    PublicKey = _testPublicKey
+                    Payload = "ssdas",
+                    EncryptionKey = _testAesKey,
+                    PublicKeyVersion = "1.0"
                 }
             }
-        };
+        }
+    };
 
         _httpRequestGatewayMock
-            .Setup(x => x.PostAsync<SafReceiveOfferNlpiEventRequest, IEnumerable<SafOfferNlpiEvent>>(
+            .Setup(x => x.GetAsync<IEnumerable<SafReceiveOfferNlpiEventResponse>>(
                 It.IsAny<string>(),
-                request,
-                null,
-                request.BearerToken,
-                "application/json"))
+                It.IsAny<Dictionary<string, string>>(),
+                request.BearerToken))
             .ReturnsAsync(expectedResponse);
 
         // Act
@@ -116,5 +121,8 @@ public class SafEventServiceTests
         Assert.NotNull(result);
         Assert.Single(result);
         Assert.Equal("event-id", result.First().Id);
+        Assert.Equal("source", result.First().Source);
+        Assert.Equal("type", result.First().Type);
+        Assert.NotNull(result.First().Data);
     }
 }
