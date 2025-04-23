@@ -173,8 +173,8 @@ Task<SafSendOfferNlpiEventResponse> SendOfferNlpiEventAsync(SafSendOfferNlpiEven
 ```csharp
 var sendRequest = new SafSendOfferNlpiEventRequest
 {
-    SchemaVersionId = "1",
-    KeySchemaVersionId = "1",
+    SchemaVersionId = "your-schema-version-id",
+    KeySchemaVersionId = "your-key-schema-version-id",
     BearerToken = "your-bearer-token",
     EventPayload = new SafOfferNlpiEvent
     {
