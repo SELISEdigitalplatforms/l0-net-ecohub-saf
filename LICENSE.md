@@ -3,7 +3,7 @@ MIT License
 Copyright © 2025 Secure Link Services AG
 
 
-# SELISE < Blocks />  Open-Source License
+# Open-Source License
 
 <!-- Microservices Layer L0 [Change] -->
 
