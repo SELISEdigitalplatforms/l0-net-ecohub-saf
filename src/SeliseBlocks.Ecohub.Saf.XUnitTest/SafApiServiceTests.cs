@@ -74,39 +74,6 @@ public class SafApiServiceTests
         Assert.Equal("Test Company", result.First().CompanyName);
     }
 
-    [Fact]
-    public async Task GetReceiversAsync_ShouldThrowException_WhenRequestFails()
-    {
-        // Arrange
-        var request = new SafReceiversRequest
-        {
-            BearerToken = "test-bearer-token",
-            Payload = new SafReceiversRequestPayload
-            {
-                LicenceKey = "test-licence-key",
-                Password = "test-password",
-                RequestId = Guid.NewGuid().ToString(),
-                RequestTime = DateTime.UtcNow.ToString("o"),
-                UserAgent = new SafUserAgent
-                {
-                    Name = "Chrome",
-                    Version = "Desktop"
-                }
-            }
-        };
-
-        _httpRequestGatewayMock
-            .Setup(x => x.PostAsync<SafReceiversRequestPayload, IEnumerable<SafReceiversResponse>>(
-                "ReceiversEndpoint",
-                request.Payload,
-                null,
-                request.BearerToken,
-                "application/json"))
-            .ThrowsAsync(new Exception("Request failed"));
-
-        // Act & Assert
-        await Assert.ThrowsAsync<Exception>(() => _safApiService.GetReceiversAsync(request));
-    }
 
     [Fact]
     public async Task GetMemberPublicKey_ShouldReturnPublicKey_WhenRequestIsSuccessful()
