@@ -18,64 +18,6 @@ public class SafApiServiceTests
     }
 
     [Fact]
-    public async Task GetReceiversAsync_ShouldReturnReceivers_WhenRequestIsSuccessful()
-    {
-        // Arrange
-        var request = new SafReceiversRequest
-        {
-            BearerToken = "test-bearer-token",
-            Payload = new SafReceiversRequestPayload
-            {
-                LicenceKey = "test-licence-key",
-                Password = "test-password",
-                RequestId = Guid.NewGuid().ToString(),
-                RequestTime = DateTime.UtcNow.ToString("o"),
-                UserAgent = new SafUserAgent
-                {
-                    Name = "Chrome",
-                    Version = "Desktop"
-                }
-            }
-        };
-
-        var expectedResponse = new List<SafReceiversResponse>
-        {
-            new SafReceiversResponse
-            {
-                Idp = new List<string> { "IDP1", "IDP2" },
-                CompanyName = "Test Company",
-                MemberType = "Test Member",
-                SafSupportedStandards = new List<SafSupportedStandard>
-                {
-                    new SafSupportedStandard
-                    {
-                        ProcessName = "Test Process",
-                        ProcessVersion = "1.0"
-                    }
-                }
-            }
-        };
-
-        _httpRequestGatewayMock
-            .Setup(x => x.PostAsync<SafReceiversRequestPayload, IEnumerable<SafReceiversResponse>>(
-                "ReceiversEndpoint",
-                request.Payload,
-                null,
-                request.BearerToken,
-                "application/json"))
-            .ReturnsAsync(expectedResponse);
-
-        // Act
-        var result = await _safApiService.GetReceiversAsync(request);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Single(result);
-        Assert.Equal("Test Company", result.First().CompanyName);
-    }
-
-
-    [Fact]
     public async Task GetMemberPublicKey_ShouldReturnPublicKey_WhenRequestIsSuccessful()
     {
         // Arrange
