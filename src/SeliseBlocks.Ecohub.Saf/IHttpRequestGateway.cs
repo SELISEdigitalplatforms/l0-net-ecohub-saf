@@ -22,4 +22,8 @@ public interface IHttpRequestGateway
     , Dictionary<string, string>? headers = null
     , string? bearerToken = null)
         where TResponse : class;
+    Task<TResponse> GetAsync<TResponse>(Uri uri
+    , Dictionary<string, string>? headers = null
+    , string? bearerToken = null)
+        where TResponse : class;
 }

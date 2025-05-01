@@ -1,7 +1,4 @@
-using System;
-using System.Security.Cryptography;
-
-namespace SeliseBlocks.Ecohub.Saf;
+namespace SeliseBlocks.Ecohub.Saf.Services;
 
 public class SafEventService : ISafEventService
 {
@@ -20,48 +17,63 @@ public class SafEventService : ISafEventService
             { "keySchemaVersionId", request.KeySchemaVersionId }
         };
 
-        var payload = request.EventPayload.MapToSafOfferNlpiEncryptedEvent();
-        payload.Data = GetCompressAndEncryptEventData(request.EventPayload.Data);
+        var payload = PrepareEventRequestPayload(request.EventPayload);
         var response = await _httpRequestGateway.PostAsync<SafOfferNlpiEncryptedEvent, SafSendOfferNlpiEventResponse>(
-            SafDriverConstant.SendOfferNlpiEventEndpoint,
-            payload,
-            header,
-            request.BearerToken);
+            endpoint: SafDriverConstant.SendOfferNlpiEventEndpoint,
+            request: payload,
+            headers: header,
+            bearerToken: request.BearerToken);
 
         return response;
     }
     public async Task<IEnumerable<SafOfferNlpiEvent>> ReceiveOfferNlpiEventAsync(SafReceiveOfferNlpiEventRequest request)
     {
+        if (string.IsNullOrWhiteSpace(request.EcohubId))
+        {
+            throw new ArgumentException("EcohubId cannot be null or empty.", nameof(request.EcohubId));
+        }
         var endpoint = SafDriverConstant.ReceiveOfferNlpiEventEndpoint.Replace("{ecohubId}", request.EcohubId);
         var header = new Dictionary<string, string>
         {
             { "auto.offset.reset", request.AutoOffsetReset }
         };
         var eventResponses = await _httpRequestGateway.GetAsync<IEnumerable<SafReceiveOfferNlpiEventResponse>>(
-            endpoint,
-            header,
-            request.BearerToken);
+            endpoint: endpoint,
+            headers: header,
+            bearerToken: request.BearerToken);
 
         var events = new List<SafOfferNlpiEvent>();
         foreach (var eventItem in eventResponses)
         {
-            var eventResponse = eventItem.Value.MapToSafOfferNlpiEvent();
-
-            var data = GetDecompressAndDecryptEventData(eventItem.Value.Data, request.PrivateKey);
-            eventResponse.Data = data;
+            var eventResponse = PrepareEventResponsePayload(eventItem, request.PrivateKey);
             events.Add(eventResponse);
         }
 
-        return events; ;
+        return events;
+    }
+
+    private SafOfferNlpiEncryptedEvent PrepareEventRequestPayload(SafOfferNlpiEvent eventPayload)
+    {
+        var payload = eventPayload.MapToSafOfferNlpiEncryptedEvent();
+        payload.Data = GetCompressAndEncryptEventData(eventPayload.Data);
+        return payload;
+    }
+    private SafOfferNlpiEvent PrepareEventResponsePayload(SafReceiveOfferNlpiEventResponse eventItem, string privateKey)
+    {
+        var eventResponse = eventItem.Value.MapToSafOfferNlpiEvent();
+
+        var data = GetDecompressAndDecryptEventData(eventItem.Value.Data, privateKey);
+        eventResponse.Data = data;
+        return eventResponse;
     }
 
     private SafEncryptedData GetCompressAndEncryptEventData(SafData data)
     {
         var compressData = GzipCompressor.CompressBytes(data.Payload);
-        var aesKey = GenerateAesKey();
+        var aesKey = KmsHelper.GenerateAesKey();
 
-        var encryptedData = AesGcmEncryptor.Encrypt(compressData, aesKey);
-        var encryptedAesKey = EncryptAesKey(aesKey, data.PublicKey);
+        var encryptedData = KmsHelper.EncryptWithAesKey(compressData, aesKey);
+        var encryptedAesKey = KmsHelper.EncryptAesKeyWithPublicKey(aesKey, data.PublicKey);
         return new SafEncryptedData
         {
             Payload = encryptedData,
@@ -74,9 +86,9 @@ public class SafEventService : ISafEventService
 
     private SafData GetDecompressAndDecryptEventData(SafEncryptedData data, string privateKey)
     {
-        var aesKey = DecryptAesKey(data.EncryptionKey, privateKey);
+        var aesKey = KmsHelper.DecryptAesKeyWithPrivateKey(data.EncryptionKey, privateKey);
 
-        var decryptedData = AesGcmEncryptor.Decrypt(data.Payload, aesKey);
+        var decryptedData = KmsHelper.DecryptWithAesKey(data.Payload, aesKey);
         var unZippedData = GzipCompressor.DecompressToBytes(decryptedData);
 
         return new SafData
@@ -88,39 +100,4 @@ public class SafEventService : ISafEventService
         };
     }
 
-    private byte[] GenerateAesKey()
-    {
-        // 1. Generate AES key
-        using Aes aes = Aes.Create();
-        aes.KeySize = 256;
-        aes.GenerateKey();
-
-        byte[] aesKey = aes.Key;
-        return aesKey;
-    }
-    private string EncryptAesKey(byte[] aesKey, string publicKey)
-    {
-        // Encrypt AES key with the public key
-        using RSA rsa = RSA.Create();
-
-        // Import the public key directly using RSA class
-        rsa.ImportFromPem(publicKey.ToCharArray());
-
-        byte[] encryptedAesKey = rsa.Encrypt(aesKey, RSAEncryptionPadding.Pkcs1);
-        return Convert.ToBase64String(encryptedAesKey);
-    }
-    private byte[] DecryptAesKey(string encryptedAesKeyBase64, string privateKey)
-    {
-        byte[] aesKey = Convert.FromBase64String(encryptedAesKeyBase64);
-        // Set up RSA for decryption
-        RSA rsaPrivate = RSA.Create();
-
-        // Import the private key
-        rsaPrivate.ImportFromPem(privateKey);
-
-        // Decrypt the AES key
-        byte[] decryptedAesKey = rsaPrivate.Decrypt(aesKey, RSAEncryptionPadding.Pkcs1);
-
-        return decryptedAesKey;
-    }
 }

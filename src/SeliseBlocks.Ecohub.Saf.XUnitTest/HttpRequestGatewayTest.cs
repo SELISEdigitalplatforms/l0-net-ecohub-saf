@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using Moq;
 using Moq.Protected;
+using SeliseBlocks.Ecohub.Saf.Services;
 using Xunit;
 
 namespace SeliseBlocks.Ecohub.Saf.XUnitTest;

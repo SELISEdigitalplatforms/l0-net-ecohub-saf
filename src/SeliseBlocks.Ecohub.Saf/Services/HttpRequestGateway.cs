@@ -4,7 +4,7 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 
-namespace SeliseBlocks.Ecohub.Saf;
+namespace SeliseBlocks.Ecohub.Saf.Services;
 
 public class HttpRequestGateway : IHttpRequestGateway
 {
@@ -14,43 +14,30 @@ public class HttpRequestGateway : IHttpRequestGateway
         _httpClient = httpClient;
     }
 
+    #region Get Methods
     public async Task<TResponse> GetAsync<TResponse>(
         string endpoint,
         Dictionary<string, string>? headers = null,
         string? bearerToken = null
     ) where TResponse : class
     {
-        try
-        {
-            var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
-            AddHeaders(request, headers, bearerToken);
-
-            var response = await _httpClient.SendAsync(request);
-            response.EnsureSuccessStatusCode();
-
-            var responseContent = await response.Content.ReadAsStringAsync();
-            if (string.IsNullOrWhiteSpace(responseContent) || responseContent == "[]" || responseContent == "{}")
-            {
-                return null!;
-            }
-
-            return JsonSerializer.Deserialize<TResponse>(responseContent)
-                   ?? throw new InvalidOperationException("Failed to deserialize response.");
-
-        }
-        catch (HttpRequestException ex)
-        {
-            throw new InvalidOperationException("HTTP request failed.", ex);
-        }
-        catch (JsonException ex)
-        {
-            throw new InvalidOperationException("Failed to deserialize response.", ex);
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException("An unexpected error occurred.", ex);
-        }
+        var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
+        return await GetAsync<TResponse>(request, headers, bearerToken);
     }
+
+    public async Task<TResponse> GetAsync<TResponse>(
+        Uri requestUri,
+        Dictionary<string, string>? headers = null,
+        string? bearerToken = null
+    ) where TResponse : class
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
+        return await GetAsync<TResponse>(request, headers, bearerToken);
+    }
+
+    #endregion Get Methods
+
+    #region Post Methods
 
     public async Task<TResponse> PostAsync<TRequest, TResponse>(
         string endpoint,
@@ -78,6 +65,48 @@ public class HttpRequestGateway : IHttpRequestGateway
     {
         var request = new HttpRequestMessage(HttpMethod.Post, url);
         return await PostAsync<TRequest, TResponse>(request, body, headers, bearerToken, contentType);
+
+    }
+
+    #endregion Post Methods
+
+    #region Private Methods
+
+    private async Task<TResponse> GetAsync<TResponse>(
+        HttpRequestMessage request,
+        Dictionary<string, string>? headers = null,
+        string? bearerToken = null
+    ) where TResponse : class
+    {
+        try
+        {
+            AddHeaders(request, headers, bearerToken);
+
+            var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+            if (string.IsNullOrWhiteSpace(responseContent) || responseContent == "[]" || responseContent == "{}")
+            {
+                return null!;
+            }
+
+            return JsonSerializer.Deserialize<TResponse>(responseContent)
+                   ?? throw new InvalidOperationException("Failed to deserialize response.");
+
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new InvalidOperationException("HTTP request failed.", ex);
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException("Failed to deserialize response.", ex);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("An unexpected error occurred.", ex);
+        }
 
     }
     private async Task<TResponse> PostAsync<TRequest, TResponse>(
@@ -157,5 +186,6 @@ public class HttpRequestGateway : IHttpRequestGateway
             }
         }
     }
+    #endregion Private Methods
 
 }

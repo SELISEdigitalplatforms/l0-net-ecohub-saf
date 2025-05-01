@@ -1,7 +1,7 @@
 using System;
 using System.Security.Cryptography;
 
-namespace SeliseBlocks.Ecohub.Saf;
+namespace SeliseBlocks.Ecohub.Saf.Services;
 
 public class SafApiService : ISafApiService
 {
@@ -16,10 +16,10 @@ public class SafApiService : ISafApiService
     {
 
         var response = await _httpRequestGateway.PostAsync<SafReceiversRequestPayload, IEnumerable<SafReceiversResponse>>(
-            SafDriverConstant.GetReceiversEndpoint,
-            request.Payload,
-            null,
-            request.BearerToken);
+            endpoint: SafDriverConstant.GetReceiversEndpoint,
+            request: request.Payload,
+            headers: null,
+            bearerToken: request.BearerToken);
 
         return response;
     }
@@ -40,9 +40,9 @@ public class SafApiService : ISafApiService
     {
         var endpoint = SafDriverConstant.GetMemberPublicKeyEndpoint.Replace("{idpNumber}", idpNumber);
         var response = await _httpRequestGateway.GetAsync<SafMemberPublicKeyResponse>(
-            endpoint,
-            null,
-            bearerToken);
+            endpoint: endpoint,
+            headers: null,
+            bearerToken: bearerToken);
 
         return response;
     }
