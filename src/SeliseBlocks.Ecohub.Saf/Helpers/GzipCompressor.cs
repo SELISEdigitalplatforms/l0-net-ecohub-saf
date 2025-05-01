@@ -2,7 +2,7 @@ using System;
 using System.IO.Compression;
 using System.Text;
 
-namespace SeliseBlocks.Ecohub.Saf;
+namespace SeliseBlocks.Ecohub.Saf.Helpers;
 
 /// <summary>
 /// Provides static methods for compressing and decompressing data using GZIP compression.

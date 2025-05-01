@@ -1,7 +1,7 @@
 using System;
 using System.Security.Cryptography;
 
-namespace SeliseBlocks.Ecohub.Saf;
+namespace SeliseBlocks.Ecohub.Saf.Helpers;
 
 /// <summary>
 /// Provides cryptographic operations for key management and data encryption/decryption.

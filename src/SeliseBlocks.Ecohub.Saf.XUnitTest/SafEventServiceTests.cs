@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using Moq;
+using SeliseBlocks.Ecohub.Saf.Helpers;
 using SeliseBlocks.Ecohub.Saf.Services;
 using Xunit;
 
@@ -205,7 +207,7 @@ BXEJV0nDz043plwyNj6Y+5zvIbfyXnb3orKNoZ9ft9V5vrkj0bWphCaUVQkkov6s
         };
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(() =>
+        await Assert.ThrowsAsync<ValidationException>(() =>
             _safEventService.ReceiveOfferNlpiEventAsync(request));
     }
 

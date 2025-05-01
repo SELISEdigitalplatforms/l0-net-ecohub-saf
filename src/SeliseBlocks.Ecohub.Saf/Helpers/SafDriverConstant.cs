@@ -1,6 +1,6 @@
 using System;
 
-namespace SeliseBlocks.Ecohub.Saf;
+namespace SeliseBlocks.Ecohub.Saf.Helpers;
 
 public static class SafDriverConstant
 {

@@ -1,6 +1,7 @@
 using System;
 using System.Net.Http.Json;
 using System.Text.Json;
+using SeliseBlocks.Ecohub.Saf.Helpers;
 
 namespace SeliseBlocks.Ecohub.Saf.Services;
 
@@ -28,6 +29,7 @@ public class SafAuthService : ISafAuthService
     /// <inheritdoc/>
     public async Task<SafBearerTokenResponse> GetBearerToken(SafBearerTokenRequest request)
     {
+        request.Validate();
         var formData = new Dictionary<string, string>
                         {
                             { "grant_type", request.Body.GrantType },
@@ -48,6 +50,7 @@ public class SafAuthService : ISafAuthService
     /// <inheritdoc/>
     public async Task<SafTechUserEnrolmentResponse> EnrolTechUserAsync(SafTechUserEnrolmentRequest request)
     {
+        request.Validate();
         var response = await _httpRequestGateway.PostAsync<SafTechUserEnrolmentRequest, SafTechUserEnrolmentResponse>(
             endpoint: SafDriverConstant.TechUserEnrolmentEndpoint,
             request: request);
@@ -58,6 +61,10 @@ public class SafAuthService : ISafAuthService
     /// <inheritdoc/>
     public async Task<SafOpenIdConfigurationResponse> GetOpenIdConfigurationAsync(Uri openIdUrl)
     {
+        if (openIdUrl == null)
+        {
+            throw new ArgumentNullException(nameof(openIdUrl), "OpenID URL cannot be null.");
+        }
         var response = await _httpRequestGateway.GetAsync<SafOpenIdConfigurationResponse>(
                         uri: openIdUrl);
 

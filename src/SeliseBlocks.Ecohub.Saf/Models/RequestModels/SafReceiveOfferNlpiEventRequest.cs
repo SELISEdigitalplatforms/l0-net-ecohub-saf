@@ -1,13 +1,21 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace SeliseBlocks.Ecohub.Saf;
 
 public class SafReceiveOfferNlpiEventRequest
 {
-    public required string BearerToken { get; set; } = string.Empty;
-    public required string EcohubId { get; set; } = string.Empty;
-    public required string PrivateKey { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "BearerToken is required")]
+    public string BearerToken { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "EcohubId is required")]
+    public string EcohubId { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "PrivateKey is required")]
+    public string PrivateKey { get; set; } = string.Empty;
+
     public string AutoOffsetReset { get; set; } = string.Empty;
 
 }

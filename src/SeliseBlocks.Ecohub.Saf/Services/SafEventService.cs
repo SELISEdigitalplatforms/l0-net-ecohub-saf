@@ -1,3 +1,5 @@
+using SeliseBlocks.Ecohub.Saf.Helpers;
+
 namespace SeliseBlocks.Ecohub.Saf.Services;
 
 public class SafEventService : ISafEventService
@@ -11,6 +13,8 @@ public class SafEventService : ISafEventService
 
     public async Task<SafSendOfferNlpiEventResponse> SendOfferNlpiEventAsync(SafSendOfferNlpiEventRequest request)
     {
+        request.Validate();
+
         var header = new Dictionary<string, string>
         {
             { "schemaVersionId", request.SchemaVersionId },
@@ -28,10 +32,8 @@ public class SafEventService : ISafEventService
     }
     public async Task<IEnumerable<SafOfferNlpiEvent>> ReceiveOfferNlpiEventAsync(SafReceiveOfferNlpiEventRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.EcohubId))
-        {
-            throw new ArgumentException("EcohubId cannot be null or empty.", nameof(request.EcohubId));
-        }
+        request.Validate();
+
         var endpoint = SafDriverConstant.ReceiveOfferNlpiEventEndpoint.Replace("{ecohubId}", request.EcohubId);
         var header = new Dictionary<string, string>
         {

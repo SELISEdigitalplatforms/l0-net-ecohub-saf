@@ -1,5 +1,4 @@
-using System;
-using System.Security.Cryptography;
+using SeliseBlocks.Ecohub.Saf.Helpers;
 
 namespace SeliseBlocks.Ecohub.Saf.Services;
 
@@ -14,7 +13,7 @@ public class SafApiService : ISafApiService
 
     public async Task<IEnumerable<SafReceiversResponse>> GetReceiversAsync(SafReceiversRequest request)
     {
-
+        request.Validate();
         var response = await _httpRequestGateway.PostAsync<SafReceiversRequestPayload, IEnumerable<SafReceiversResponse>>(
             endpoint: SafDriverConstant.GetReceiversEndpoint,
             request: request.Payload,
@@ -38,6 +37,14 @@ public class SafApiService : ISafApiService
     /// <returns></returns>
     public async Task<SafMemberPublicKeyResponse> GetMemberPublicKey(string bearerToken, string idpNumber)
     {
+        if (string.IsNullOrEmpty(bearerToken))
+        {
+            throw new ArgumentException("bearerToken cannot be null or empty.", nameof(bearerToken));
+        }
+        if (string.IsNullOrEmpty(idpNumber))
+        {
+            throw new ArgumentException("idpNumber cannot be null or empty.", nameof(idpNumber));
+        }
         var endpoint = SafDriverConstant.GetMemberPublicKeyEndpoint.Replace("{idpNumber}", idpNumber);
         var response = await _httpRequestGateway.GetAsync<SafMemberPublicKeyResponse>(
             endpoint: endpoint,
