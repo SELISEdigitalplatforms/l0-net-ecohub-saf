@@ -100,8 +100,12 @@ public class SafApiService : ISafApiService
     /// A task that represents the asynchronous operation. The task result contains a 
     /// <see cref="SafMemberGetEncryptedKeyResponse"/> object, which includes the provided key ID and the encrypted public key.
     /// </returns>
-    public async Task<SafMemberGetEncryptedKeyResponse> SafMemberGetEncryptedPublicKey(string bearerToken, string keyId) 
+    public async Task<SafMemberGetEncryptedKeyResponse> GetMemberEncryptedPublicKey(string bearerToken, string keyId) 
     {
+        if (string.IsNullOrEmpty(bearerToken))
+        {
+            throw new ArgumentException("bearerToken cannot be null or empty.", nameof(bearerToken));
+        }
         if (string.IsNullOrEmpty(keyId))
         {
             throw new ArgumentException("keyId cannot be null or empty.", nameof(keyId));
