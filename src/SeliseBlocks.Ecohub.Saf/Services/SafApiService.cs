@@ -82,4 +82,37 @@ public class SafApiService : ISafApiService
 
         return response;
     }
+
+    /// <summary>
+    /// Asynchronously retrieves the encrypted public key of a member from the SAF API.
+    /// This method sends a request to the SAF API to get the encrypted public key of a member based on the provided key ID.
+    /// The request should include the necessary authentication details and the key ID of the member whose encrypted public key is being requested.
+    /// </summary>
+    /// <param name="bearerToken">
+    /// The bearer token obtained from the SAF API after successful authentication.
+    /// This token is used to authorize the request to retrieve the member's public key.
+    /// 
+    /// </param>
+    /// <param name="keyId">
+    /// The key ID of the member whose encrypted public key is being requested.
+    /// </param>
+    /// <returns>
+    /// A task that represents the asynchronous operation. The task result contains a 
+    /// <see cref="SafMemberGetEncryptedKeyResponse"/> object, which includes the provided key ID and the encrypted public key.
+    /// </returns>
+    public async Task<SafMemberGetEncryptedKeyResponse> SafMemberGetEncryptedPublicKey(string bearerToken, string keyId) 
+    {
+        if (string.IsNullOrEmpty(keyId))
+        {
+            throw new ArgumentException("keyId cannot be null or empty.", nameof(keyId));
+        }
+
+        var endpoint = SafDriverConstant.GetEncryptedPublicKeyEndpoint.Replace("{keyId}", keyId);
+        var response = await _httpRequestGateway.GetAsync<SafMemberGetEncryptedKeyResponse>(
+            endpoint: endpoint,
+            headers: null,
+            bearerToken: bearerToken);
+
+        return response;
+    }
 }
