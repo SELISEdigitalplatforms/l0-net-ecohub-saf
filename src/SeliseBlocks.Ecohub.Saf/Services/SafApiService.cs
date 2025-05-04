@@ -54,4 +54,32 @@ public class SafApiService : ISafApiService
         return response;
     }
 
+    /// <summary>
+    /// Asynchronously uploads the public key of a member to the SAF API.
+    /// This method sends a request to the SAF API to upload a member's public key along with its metadata.
+    /// The request should include the necessary authentication details and the payload containing the public key information.
+    /// </summary>
+    /// <param name="request">
+    /// The request object containing the bearer token and payload for uploading the member's public key.
+    /// The payload includes details such as:
+    /// - The public key to be uploaded.
+    /// - version of the public key.
+    /// - expire in days of the public key.
+    /// </param>
+    /// <returns>
+    /// A task that represents the asynchronous operation. The task result contains a 
+    /// <see cref="SafMemberPublicKeyResponse"/> object, which includes the details of the uploaded public key.
+    /// </returns>
+    public async Task<SafMemberPublicKeyResponse> UploadMemberPublicKey(SafMemberPublicKeyUploadRequest request) 
+    {
+        request.Validate();
+
+        var response = await _httpRequestGateway.PostAsync<SafMemberPublicKeyUploadRequest, SafMemberPublicKeyResponse>(
+            endpoint: SafDriverConstant.UploadMemberPublicKeyEndpoint,
+            request: request,
+            headers: null,
+            bearerToken: request.BearerToken);
+
+        return response;
+    }
 }

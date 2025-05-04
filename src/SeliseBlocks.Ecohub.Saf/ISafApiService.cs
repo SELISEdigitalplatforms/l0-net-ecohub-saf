@@ -1,5 +1,3 @@
-using System;
-
 namespace SeliseBlocks.Ecohub.Saf;
 
 /// <summary>
@@ -56,5 +54,25 @@ public interface ISafApiService
     /// </exception>
     Task<SafMemberPublicKeyResponse> GetMemberPublicKey(string bearerToken, string idpNumber);
 
-
+    /// <summary>
+    /// Asynchronously retrieves receiver information from the SAF API.
+    /// </summary>
+    /// <param name="request">
+    /// The request object containing the bearer token and payload for obtaining receiver information.
+    /// The payload includes details such as:
+    /// - <see cref="SafMemberPublicKeyUploadRequestPayload.Version"/>: Version of the public key.
+    /// - <see cref="SafMemberPublicKeyUploadRequestPayload.Key"/>: The public key to be uploaded.
+    /// - <see cref="SafMemberPublicKeyUploadRequestPayload.ExpireInDays"/>: Expire in days of the public key.
+    /// </param>
+    /// <returns>
+    /// A task that represents the asynchronous operation. The task result contains a collection of 
+    /// <see cref="SafReceiversResponse"/> objects, which include information about the receivers.
+    /// </returns>
+    /// <exception cref="HttpRequestException">
+    /// Thrown if there is an issue with the HTTP request, such as a network error or invalid response.
+    /// </exception>
+    /// <exception cref="JsonException">
+    /// Thrown if there is an issue deserializing the response from the SAF API.
+    /// </exception>
+    Task<SafMemberPublicKeyResponse> UploadMemberPublicKey(SafMemberPublicKeyUploadRequest request);
 }
