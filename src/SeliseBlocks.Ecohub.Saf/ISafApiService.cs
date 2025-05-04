@@ -99,5 +99,26 @@ public interface ISafApiService
     /// </exception>
     Task<SafMemberGetEncryptedKeyResponse> GetMemberEncryptedPublicKey(string bearerToken, string keyId);
 
-
+    /// <summary>
+    /// Asynchronously retrieves the public key of a member from the SAF API.
+    /// </summary>
+    /// <param name="bearerToken">
+    /// The bearer token obtained from the SAF API after successful authentication. 
+    /// This token is used to authorize the request to retrieve the member's public key.
+    /// </param>
+    /// <param name="keyId">
+    /// The Key ID of the member whose public key is being requested. 
+    /// This number uniquely identifies the member in the SAF API.
+    /// </param>
+    /// <returns>
+    /// A task that represents the asynchronous operation. The task result contains a 
+    /// <see cref="SafMemberVerifyDecryptedKeyResponse"/> object, which includes the verification status (Success/Fail).
+    /// </returns>
+    /// <exception cref="errorCode">
+    /// Thrown if there is an issue with the key, such as key version already exist.
+    /// </exception>
+    /// <exception cref="errorMessage">
+    /// Thrown with detailed message if there is an issue with the given key.
+    /// </exception>
+    Task<SafMemberVerifyDecryptedKeyResponse> VerifyMemberDecryptedPublicKey(string bearerToken, string keyId);
 }

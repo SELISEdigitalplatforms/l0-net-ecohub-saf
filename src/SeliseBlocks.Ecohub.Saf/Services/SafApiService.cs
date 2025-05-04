@@ -119,4 +119,41 @@ public class SafApiService : ISafApiService
 
         return response;
     }
+
+    /// <summary>
+    /// Asynchronously retrieves the encrypted public key of a member from the SAF API.
+    /// This method sends a request to the SAF API to get the encrypted public key of a member based on the provided key ID.
+    /// The request should include the necessary authentication details and the key ID of the member whose encrypted public key is being requested.
+    /// </summary>
+    /// <param name="bearerToken">
+    /// The bearer token obtained from the SAF API after successful authentication.
+    /// This token is used to authorize the request to retrieve the member's public key.
+    /// 
+    /// </param>
+    /// <param name="keyId">
+    /// The key ID of the member whose encrypted public key is being requested.
+    /// </param>
+    /// <returns>
+    /// A task that represents the asynchronous operation. The task result contains a 
+    /// <see cref="SafMemberVerifyDecryptedKeyResponse"/> object, which includes the verification status (Success/Fail).
+    /// </returns>
+    public async Task<SafMemberVerifyDecryptedKeyResponse> VerifyMemberDecryptedPublicKey(string bearerToken, string keyId) 
+    {
+        if (string.IsNullOrEmpty(bearerToken))
+        {
+            throw new ArgumentException("bearerToken cannot be null or empty.", nameof(bearerToken));
+        }
+        if (string.IsNullOrEmpty(keyId))
+        {
+            throw new ArgumentException("keyId cannot be null or empty.", nameof(keyId));
+        }
+
+        var endpoint = SafDriverConstant.VerifyDecryptedPublicKeyEndpoint.Replace("{keyId}", keyId);
+        var response = await _httpRequestGateway.GetAsync<SafMemberVerifyDecryptedKeyResponse>(
+            endpoint: endpoint,
+            headers: null,
+            bearerToken: bearerToken);
+
+        return response;
+    }
 }
