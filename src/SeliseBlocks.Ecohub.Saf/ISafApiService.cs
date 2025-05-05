@@ -120,5 +120,5 @@ public interface ISafApiService
     /// <exception cref="errorMessage">
     /// Thrown with detailed message if there is an issue with the given key.
     /// </exception>
-    Task<SafMemberVerifyDecryptedKeyResponse> VerifyMemberDecryptedPublicKey(string bearerToken, string keyId);
+    Task<SafMemberVerifyDecryptedKeyResponse> VerifyMemberDecryptedPublicKey(SafMemberVerifyDecryptedKeyRequest request, string keyId);
 }

@@ -137,11 +137,11 @@ public class SafApiService : ISafApiService
     /// A task that represents the asynchronous operation. The task result contains a 
     /// <see cref="SafMemberVerifyDecryptedKeyResponse"/> object, which includes the verification status (Success/Fail).
     /// </returns>
-    public async Task<SafMemberVerifyDecryptedKeyResponse> VerifyMemberDecryptedPublicKey(string bearerToken, string keyId) 
+    public async Task<SafMemberVerifyDecryptedKeyResponse> VerifyMemberDecryptedPublicKey(SafMemberVerifyDecryptedKeyRequest request, string keyId)
     {
-        if (string.IsNullOrEmpty(bearerToken))
+        if (string.IsNullOrEmpty(request.BearerToken))
         {
-            throw new ArgumentException("bearerToken cannot be null or empty.", nameof(bearerToken));
+            throw new ArgumentException("bearerToken cannot be null or empty.", nameof(request.BearerToken));
         }
         if (string.IsNullOrEmpty(keyId))
         {
@@ -149,10 +149,11 @@ public class SafApiService : ISafApiService
         }
 
         var endpoint = SafDriverConstant.VerifyDecryptedPublicKeyEndpoint.Replace("{keyId}", keyId);
-        var response = await _httpRequestGateway.GetAsync<SafMemberVerifyDecryptedKeyResponse>(
+        var response = await _httpRequestGateway.PostAsync<SafMemberVerifyDecryptedKeyRequest, SafMemberVerifyDecryptedKeyResponse>(
             endpoint: endpoint,
+            request: request, 
             headers: null,
-            bearerToken: bearerToken);
+            bearerToken: request.BearerToken);
 
         return response;
     }

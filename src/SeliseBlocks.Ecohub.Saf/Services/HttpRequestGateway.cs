@@ -41,7 +41,7 @@ public class HttpRequestGateway : IHttpRequestGateway
 
     public async Task<TResponse> PostAsync<TRequest, TResponse>(
         string endpoint,
-        TRequest body,
+        TRequest? body,
         Dictionary<string, string>? headers = null,
         string? bearerToken = null,
         string? contentType = "application/json"
@@ -55,7 +55,7 @@ public class HttpRequestGateway : IHttpRequestGateway
 
     public async Task<TResponse> PostAsync<TRequest, TResponse>(
         Uri url,
-        TRequest body,
+        TRequest? body,
         Dictionary<string, string>? headers = null,
         string? bearerToken = null,
         string? contentType = "application/json"
@@ -111,7 +111,7 @@ public class HttpRequestGateway : IHttpRequestGateway
     }
     private async Task<TResponse> PostAsync<TRequest, TResponse>(
         HttpRequestMessage request,
-        TRequest body,
+        TRequest? body,
         Dictionary<string, string>? headers = null,
         string? bearerToken = null,
         string? contentType = "application/json"
