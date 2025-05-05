@@ -1,3 +1,6 @@
+using SeliseBlocks.Ecohub.Saf.Helpers;
+using SeliseBlocks.Ecohub.Saf.Services;
+
 namespace SeliseBlocks.Ecohub.Saf;
 
 /// <summary>
@@ -102,10 +105,6 @@ public interface ISafApiService
     /// <summary>
     /// Asynchronously retrieves the public key of a member from the SAF API.
     /// </summary>
-    /// <param name="bearerToken">
-    /// The bearer token obtained from the SAF API after successful authentication. 
-    /// This token is used to authorize the request to retrieve the member's public key.
-    /// </param>
     /// <param name="keyId">
     /// The Key ID of the member whose public key is being requested. 
     /// This number uniquely identifies the member in the SAF API.
@@ -121,4 +120,22 @@ public interface ISafApiService
     /// Thrown with detailed message if there is an issue with the given key.
     /// </exception>
     Task<SafMemberVerifyDecryptedKeyResponse> VerifyMemberDecryptedPublicKey(SafMemberVerifyDecryptedKeyRequest request, string keyId);
+
+    /// <summary>
+    /// Asynchronously activates the public key of a member from the SAF API.
+    /// This method sends a request to the SAF API to activate the public key of a member based on the provided key ID.
+    /// The request should include the necessary authentication details and the key ID of the member.
+    /// </summary>
+    /// <param name="bearerToken">
+    /// The bearer token obtained from the SAF API after successful authentication.
+    /// This token is used to authorize the request to retrieve the member's public key.
+    /// </param>
+    /// <param name="keyId">
+    /// The key ID of the member whose encrypted public key is being requested.
+    /// </param>
+    /// <returns>
+    /// A task that represents the asynchronous operation. The task result contains a 
+    /// <see cref="true/false"/> which indicates the activation status (Success/Fail).
+    /// </returns>
+    Task<bool> ActivateMemberPublicKey(string bearerToken, string keyId);
 }

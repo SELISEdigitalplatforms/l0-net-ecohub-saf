@@ -121,17 +121,15 @@ public class SafApiService : ISafApiService
     }
 
     /// <summary>
-    /// Asynchronously retrieves the encrypted public key of a member from the SAF API.
-    /// This method sends a request to the SAF API to get the encrypted public key of a member based on the provided key ID.
-    /// The request should include the necessary authentication details and the key ID of the member whose encrypted public key is being requested.
+    /// Asynchronously verifies the decrypted public key of a member from the SAF API.
+    /// This method sends a request to the SAF API to verify the decrypted public key of a member based on the provided key ID.
+    /// The request should include the necessary authentication details and the key ID of the member whose decrypted public key needs to be verified.
     /// </summary>
-    /// <param name="bearerToken">
-    /// The bearer token obtained from the SAF API after successful authentication.
-    /// This token is used to authorize the request to retrieve the member's public key.
-    /// 
+    /// <param name="request">
+    /// The request object containing the bearer token and payload for verifying the member's decripted public key.
     /// </param>
     /// <param name="keyId">
-    /// The key ID of the member whose encrypted public key is being requested.
+    /// The key ID of the member whose decrypted public key needs to be verified.
     /// </param>
     /// <returns>
     /// A task that represents the asynchronous operation. The task result contains a 
@@ -148,13 +146,70 @@ public class SafApiService : ISafApiService
             throw new ArgumentException("keyId cannot be null or empty.", nameof(keyId));
         }
 
-        var endpoint = SafDriverConstant.VerifyDecryptedPublicKeyEndpoint.Replace("{keyId}", keyId);
-        var response = await _httpRequestGateway.PostAsync<SafMemberVerifyDecryptedKeyRequest, SafMemberVerifyDecryptedKeyResponse>(
-            endpoint: endpoint,
-            request: request, 
-            headers: null,
-            bearerToken: request.BearerToken);
+        try
+        {
+            var endpoint = SafDriverConstant.VerifyDecryptedPublicKeyEndpoint.Replace("{keyId}", keyId);
+            await _httpRequestGateway.PostAsync<SafMemberVerifyDecryptedKeyRequest, SafMemberVerifyDecryptedKeyResponse>(
+                endpoint: endpoint,
+                request: request,
+                headers: null,
+                bearerToken: request.BearerToken);
 
-        return response;
+            return new SafMemberVerifyDecryptedKeyResponse
+            {
+                VerificationStatus = VerificationStatus.Success
+            };
+        }
+        catch
+        {
+            return new SafMemberVerifyDecryptedKeyResponse
+            {
+                VerificationStatus = VerificationStatus.Fail
+            };
+        }
+    }
+
+    /// <summary>
+    /// Asynchronously activates the public key of a member from the SAF API.
+    /// This method sends a request to the SAF API to activate the public key of a member based on the provided key ID.
+    /// The request should include the necessary authentication details and the key ID of the member.
+    /// </summary>
+    /// <param name="bearerToken">
+    /// The bearer token obtained from the SAF API after successful authentication.
+    /// This token is used to authorize the request to retrieve the member's public key.
+    /// </param>
+    /// <param name="keyId">
+    /// The key ID of the member whose encrypted public key is being requested.
+    /// </param>
+    /// <returns>
+    /// A task that represents the asynchronous operation. The task result contains a 
+    /// <see cref="true/false"/> which indicates the activation status (Success/Fail).
+    /// </returns>
+    public async Task<bool> ActivateMemberPublicKey(string bearerToken, string keyId)
+    {
+        if (string.IsNullOrEmpty(bearerToken))
+        {
+            throw new ArgumentException("bearerToken cannot be null or empty.", nameof(bearerToken));
+        }
+        if (string.IsNullOrEmpty(keyId))
+        {
+            throw new ArgumentException("keyId cannot be null or empty.", nameof(keyId));
+        }
+
+        try
+        {
+            var endpoint = SafDriverConstant.ActivatePublicKeyEndpoint.Replace("{keyId}", keyId);
+            await _httpRequestGateway.PostAsync<object, object>(
+                endpoint: endpoint,
+                request: null,
+                headers: null,
+                bearerToken: bearerToken);
+
+            return true;
+        }
+        catch 
+        {
+            return false;
+        }
     }
 }
