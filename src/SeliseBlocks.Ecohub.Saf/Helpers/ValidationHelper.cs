@@ -13,7 +13,7 @@ public static class ValidationHelper
         if (!Validator.TryValidateObject(request, context, results, validateAllProperties: true))
         {
             var errorMessages = string.Join("; ", results.Select(r => r.ErrorMessage));
-            throw new ValidationException($"Invalid person request: {errorMessages}");
+            throw new ValidationException($"Invalid request: {errorMessages}");
         }
     }
 
