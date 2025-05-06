@@ -7,6 +7,9 @@ public class SafMemberVerifyDecryptedKeyRequest
 {
     [Required(ErrorMessage = "BearerToken is required")]
     public string BearerToken { get; set; } = string.Empty;
+    
+    [Required(ErrorMessage = "KeyId is required")]
+    public string KeyId { get; set; } = string.Empty;
 
     public SafMemberVerifyDecryptedKeyRequestPayload Payload { get; set; } = new SafMemberVerifyDecryptedKeyRequestPayload();
 }

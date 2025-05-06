@@ -74,9 +74,9 @@ public class SafApiService : ISafApiService
     {
         request.Validate();
 
-        var response = await _httpRequestGateway.PostAsync<SafMemberPublicKeyUploadRequest, SafMemberPublicKeyResponse>(
+        var response = await _httpRequestGateway.PostAsync<SafMemberPublicKeyUploadRequestPayload, SafMemberPublicKeyResponse>(
             endpoint: SafDriverConstant.UploadMemberPublicKeyEndpoint,
-            request: request,
+            request: request.Payload,
             headers: null,
             bearerToken: request.BearerToken);
 
@@ -135,20 +135,13 @@ public class SafApiService : ISafApiService
     /// A task that represents the asynchronous operation. The task result contains a 
     /// <see cref="SafMemberVerifyDecryptedKeyResponse"/> object, which includes the verification status (Success/Fail).
     /// </returns>
-    public async Task<SafMemberVerifyDecryptedKeyResponse> VerifyMemberDecryptedPublicKey(SafMemberVerifyDecryptedKeyRequest request, string keyId)
+    public async Task<SafMemberVerifyDecryptedKeyResponse> VerifyMemberDecryptedPublicKey(SafMemberVerifyDecryptedKeyRequest request)
     {
-        if (string.IsNullOrEmpty(request.BearerToken))
-        {
-            throw new ArgumentException("bearerToken cannot be null or empty.", nameof(request.BearerToken));
-        }
-        if (string.IsNullOrEmpty(keyId))
-        {
-            throw new ArgumentException("keyId cannot be null or empty.", nameof(keyId));
-        }
+        request.Validate();
 
         try
         {
-            var endpoint = SafDriverConstant.VerifyDecryptedPublicKeyEndpoint.Replace("{keyId}", keyId);
+            var endpoint = SafDriverConstant.VerifyDecryptedPublicKeyEndpoint.Replace("{keyId}", request.KeyId);
             await _httpRequestGateway.PostAsync<SafMemberVerifyDecryptedKeyRequest, SafMemberVerifyDecryptedKeyResponse>(
                 endpoint: endpoint,
                 request: request,

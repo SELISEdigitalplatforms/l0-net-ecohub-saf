@@ -116,7 +116,7 @@ public interface ISafApiService
     /// <exception cref="errorMessage">
     /// Thrown with detailed message if there is an issue with the given key.
     /// </exception>
-    Task<SafMemberVerifyDecryptedKeyResponse> VerifyMemberDecryptedPublicKey(SafMemberVerifyDecryptedKeyRequest request, string keyId);
+    Task<SafMemberVerifyDecryptedKeyResponse> VerifyMemberDecryptedPublicKey(SafMemberVerifyDecryptedKeyRequest request);
 
     /// <summary>
     /// Asynchronously activates the public key of a member from the SAF API.
