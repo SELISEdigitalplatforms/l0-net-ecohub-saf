@@ -151,6 +151,125 @@ var publicKeyResponse = await apiService.GetMemberPublicKey("your-bearer-token",
 Console.WriteLine($"Public Key: {publicKeyResponse.Key}");
 ```
 
+#### Upload Member Public Key
+
+To upload the public key of a member, use the `UploadMemberPublicKey` method:
+
+```csharp
+Task<SafMemberPublicKeyResponse> UploadMemberPublicKey(SafMemberPublicKeyUploadRequest request);
+```
+
+- **Parameters**:
+  - `SafMemberPublicKeyUploadRequest`: Contains the bearer token and payload for uploading public key of a member.
+    - `Payload` includes:
+      - `Version`: The version of the public key.
+      - `Key`: The public key to be uploaded.
+      - `ExpireInDays`: Expire in days of the public key.
+
+- **Returns**: A `SafMemberPublicKeyResponse` object containing the member's public key and related metadata.
+
+**Example**:
+
+```csharp
+var request = new SafMemberPublicKeyUploadRequest
+{
+    BearerToken = "your-bearer-token",
+    Payload = new SafMemberVerifyDecryptedKeyRequestPayload
+    {
+        Version = "saf-rsa-dev-broker-SP149-4",
+        Key = "your-public-Key",
+        ExpireInDays = "7"
+    }
+};
+var receiversResponse = await apiService.UploadMemberPublicKey(request);
+Console.WriteLine($"KeyId: {receiversResponse.KeyId}");
+```
+
+#### Retrieve Member's Encrypted Public Key
+
+To retrieve the encrypted public key of a member, use the `GetMemberEncryptedPublicKey` method:
+
+```csharp
+Task<SafMemberGetEncryptedKeyResponse> GetMemberEncryptedPublicKey(string bearerToken, string keyId);
+```
+
+- **Parameters**:
+  - `bearerToken`: The authentication token.
+  - `keyId`: The key ID of the member.
+
+- **Returns**: A `SafMemberGetEncryptedKeyResponse` object containing the member's key ID and encrypted content.
+
+**Example**:
+
+```csharp
+var request = new SafMemberPublicKeyUploadRequest
+{
+    BearerToken = "your-bearer-token",
+    Payload = new SafMemberPublicKeyUploadRequestPayload
+    {
+        Version = "saf-rsa-dev-broker-SP149-4",
+        Key = "your-public-Key",
+        ExpireInDays = "7"
+    }
+};
+var encryptedPublicKeyResponse = await apiService.GetEncryptedPublicKeyEndpoint("your-bearer-token", "12345");
+Console.WriteLine($"encryptedContent: {encryptedPublicKeyResponse.encryptedContent}");
+```
+
+#### Verify Member's Decrypted Public Key
+
+To verify the decrypted public key of a member, use the `VerifyMemberDecryptedPublicKey` method:
+
+```csharp
+Task<SafMemberVerifyDecryptedKeyResponse> VerifyMemberDecryptedPublicKey(SafMemberVerifyDecryptedKeyRequest request);
+```
+
+- **Parameters**:
+ - `SafMemberVerifyDecryptedKeyRequest`: Contains the bearer token and key ID for uploading decrypted public key of a member.
+    - `Payload` includes:
+      - `DecryptedContent`: The decrypted public key.
+
+- **Returns**: A `SafMemberVerifyDecryptedKeyResponse` object containing the verification status (Success/Fail).
+
+**Example**:
+
+```csharp
+var request = new SafMemberPublicKeyUploadRequest
+{
+    BearerToken = "your-bearer-token",
+    KeyId = "your-key-id",
+    Payload = new SafMemberPublicKeyUploadRequestPayload
+    {
+        DecryptedContent = "your-decrypted-content"
+    }
+};
+var response = await apiService.VerifyMemberDecryptedPublicKey(request);
+Console.WriteLine($"Status: {response.VerificationStatus}");
+```
+
+
+#### Activaet Member's Public Key
+
+To activate the public key of a member, use the `ActivateMemberPublicKey` method:
+
+```csharp
+Task<bool> ActivateMemberPublicKey(string bearerToken, string keyId);
+```
+
+- **Parameters**:
+  - `bearerToken`: The authentication token.
+  - `keyId`: The key ID of the member.
+
+- **Returns**: A `bool` value which indicates the activation status (Success/Fail).
+
+**Example**:
+
+```csharp
+var response = await apiService.ActivateMemberPublicKey(bearerToken, keyId);
+Console.WriteLine($"Status: {response}");
+```
+
+
 ---
 
 ### 3. SAF Event Handling
