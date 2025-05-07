@@ -44,7 +44,7 @@ This method registers the following services:
 
 The `ISafAuthService` interface provides methods for handling authentication with the SAF API.
 
-#### Enroll Technical User
+#### Tech User Enrolment
 
 To enroll a technical user in the SAF system, use the `EnrolTechUserAsync` method:
 
