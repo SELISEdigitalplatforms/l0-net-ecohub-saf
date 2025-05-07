@@ -44,6 +44,85 @@ This method registers the following services:
 
 The `ISafAuthService` interface provides methods for handling authentication with the SAF API.
 
+#### Enroll Technical User
+
+To enroll a technical user in the SAF system, use the `EnrolTechUserAsync` method:
+
+```csharp
+Task<SafTechUserEnrolmentResponse> EnrolTechUserAsync(SafTechUserEnrolmentRequest request);
+```
+
+- **Parameters**:
+  - `SafTechUserEnrolmentRequest`: Contains the technical user's enrollment information.
+    - `Iak`: (Required) The IAK identifier
+    - `IdpUserId`: (Required) The IDP user identifier
+    - `LicenceKey`: (Required) The license key
+    - `Password`: (Required) The user's password
+    - `RequestId`: A unique identifier for the request
+    - `RequestTime`: The timestamp of the request
+    - `UserAgent`: Information about the user agent
+
+- **Returns**: A `SafTechUserEnrolmentResponse` object containing:
+  - `TechUserCert`: The technical user certificate
+  - `OAuth2`: OAuth2 configuration including:
+    - `ClientId`: The client identifier
+    - `ClientSecret`: The client secret
+    - `OpenIdConfigurationEndpoint`: The OpenID configuration endpoint
+
+**Example**:
+
+```csharp
+var request = new SafTechUserEnrolmentRequest
+{
+    Iak = "your-iak",
+    IdpUserId = "your-user-id",
+    LicenceKey = "your-licence-key",
+    Password = "your-password",
+    RequestId = Guid.NewGuid().ToString(),
+    RequestTime = DateTime.UtcNow.ToString("o"),
+    UserAgent = new SafUserAgent
+    {
+        Name = "Chrome",
+        Version = "126.0.6478.270"
+    }
+};
+
+var response = await authService.EnrolTechUserAsync(request);
+Console.WriteLine($"Tech User Cert: {response.TechUserCert}");
+Console.WriteLine($"Client ID: {response.OAuth2.ClientId}");
+```
+
+#### Get OpenID Configuration
+
+To retrieve the OpenID configuration, use the `GetOpenIdConfigurationAsync` method:
+
+```csharp
+Task<SafOpenIdConfigurationResponse> GetOpenIdConfigurationAsync(Uri openIdUrl);
+```
+
+- **Parameters**:
+  - `openIdUrl`: The URL of the OpenID configuration endpoint
+
+- **Returns**: A `SafOpenIdConfigurationResponse` object containing:
+  - `TokenEndpoint`: The token endpoint URL
+  - `Issuer`: The token issuer
+  - `AuthorizationEndpoint`: The authorization endpoint
+  - `UserinfoEndpoint`: The user info endpoint
+  - `DeviceAuthorizationEndpoint`: The device authorization endpoint
+  - `EndSessionEndpoint`: The end session endpoint
+  - Various supported methods and configurations
+
+**Example**:
+
+```csharp
+var openIdUrl = new Uri("https://your-openid-config-url");
+var config = await authService.GetOpenIdConfigurationAsync(openIdUrl);
+
+Console.WriteLine($"Token Endpoint: {config.TokenEndpoint}");
+Console.WriteLine($"Issuer: {config.Issuer}");
+Console.WriteLine($"Auth Endpoint: {config.AuthorizationEndpoint}");
+```
+
 #### Retrieve Bearer Token
 
 To obtain a bearer token, use the `GetBearerToken` method:
