@@ -1,5 +1,3 @@
-using System;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace SeliseBlocks.Ecohub.Saf;
@@ -12,7 +10,6 @@ public class SafSendOfferNlpiEventResponse
     public int ValueSchemaId { get; set; }
     [JsonPropertyName("offsets")]
     public IEnumerable<SafSendOfferNlpiEventResponseOffset> Offsets { get; set; } = [];
-
 }
 
 public class SafSendOfferNlpiEventResponseOffset
@@ -25,5 +22,4 @@ public class SafSendOfferNlpiEventResponseOffset
     public int? ErrorCode { get; set; }
     [JsonPropertyName("error")]
     public string? Error { get; set; }
-
 }

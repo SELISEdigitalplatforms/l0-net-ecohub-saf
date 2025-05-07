@@ -1,8 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Moq;
-using Xunit;
+using SeliseBlocks.Ecohub.Saf.Helpers;
+using SeliseBlocks.Ecohub.Saf.Services;
 
 namespace SeliseBlocks.Ecohub.Saf.XUnitTest;
 
@@ -92,5 +90,109 @@ public class SafAuthServiceTests
 
         // Act & Assert
         await Assert.ThrowsAsync<Exception>(() => _safAuthService.GetBearerToken(request));
+    }
+
+    [Fact]
+    public async Task EnrolTechUserAsync_ShouldReturnResponse_WhenRequestIsValid()
+    {
+        // Arrange
+        var request = new SafTechUserEnrolmentRequest
+        {
+            Iak = "test-iak",
+            IdpUserId = "test-user-id",
+            LicenceKey = "test-licence",
+            Password = "test-password",
+            RequestId = Guid.NewGuid().ToString(),
+            RequestTime = DateTime.UtcNow.ToString("o"),
+            UserAgent = new SafUserAgent
+            {
+                Name = "test-agent",
+                Version = "1.0"
+            }
+        };
+
+        var expectedResponse = new SafTechUserEnrolmentResponse
+        {
+            TechUserCert = "test-cert",
+            OAuth2 = new SafTechUserEnrolmentOauth2Response
+            {
+                ClientId = "test-client-id",
+                ClientSecret = "test-client-secret",
+                OpenIdConfigurationEndpoint = "https://test.com/openid"
+            }
+        };
+
+        _httpRequestGatewayMock
+            .Setup(x => x.PostAsync<SafTechUserEnrolmentRequest, SafTechUserEnrolmentResponse>(
+                It.Is<string>(url => url == SafDriverConstant.TechUserEnrolmentEndpoint),
+                It.Is<SafTechUserEnrolmentRequest>(r => r.Iak == request.Iak),
+                It.IsAny<Dictionary<string, string>>(),
+                It.IsAny<string>(),
+                It.IsAny<string>()))
+            .ReturnsAsync(expectedResponse);
+
+        // Act
+        var result = await _safAuthService.EnrolTechUserAsync(request);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(expectedResponse.TechUserCert, result.TechUserCert);
+        Assert.Equal(expectedResponse.OAuth2.ClientId, result.OAuth2.ClientId);
+        Assert.Equal(expectedResponse.OAuth2.ClientSecret, result.OAuth2.ClientSecret);
+    }
+
+    [Fact]
+    public async Task GetOpenIdConfigurationAsync_ShouldReturnResponse_WhenUrlIsValid()
+    {
+        // Arrange
+        var openIdUrl = new Uri("https://test.com/openid");
+        var expectedResponse = new SafOpenIdConfigurationResponse
+        {
+            TokenEndpoint = "https://test.com/token",
+            Issuer = "test-issuer",
+            AuthorizationEndpoint = "https://test.com/auth",
+            UserinfoEndpoint = "https://test.com/userinfo",
+            DeviceAuthorizationEndpoint = "https://test.com/device",
+            EndSessionEndpoint = "https://test.com/logout",
+            TokenEndpointAuthMethodsSupported = new[] { "client_secret_post" },
+            ResponseModesSupported = new[] { "query" },
+            SubjectTypesSupported = new[] { "public" },
+            ResponseTypesSupported = new[] { "code" },
+            ScopesSupported = new[] { "openid" }
+        };
+
+        _httpRequestGatewayMock
+            .Setup(x => x.GetAsync<SafOpenIdConfigurationResponse>(
+                It.Is<Uri>(uri => uri == openIdUrl),
+                It.IsAny<Dictionary<string, string>>(),
+                It.IsAny<string>()))
+            .ReturnsAsync(expectedResponse);
+
+        // Act
+        var result = await _safAuthService.GetOpenIdConfigurationAsync(openIdUrl);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(expectedResponse.TokenEndpoint, result.TokenEndpoint);
+        Assert.Equal(expectedResponse.Issuer, result.Issuer);
+        Assert.Equal(expectedResponse.AuthorizationEndpoint, result.AuthorizationEndpoint);
+        Assert.Equal(expectedResponse.UserinfoEndpoint, result.UserinfoEndpoint);
+    }
+
+    [Fact]
+    public async Task GetOpenIdConfigurationAsync_ShouldThrowException_WhenRequestFails()
+    {
+        // Arrange
+        var openIdUrl = new Uri("https://test.com/openid");
+        _httpRequestGatewayMock
+            .Setup(x => x.GetAsync<SafOpenIdConfigurationResponse>(
+                It.IsAny<Uri>(),
+                It.IsAny<Dictionary<string, string>>(),
+                It.IsAny<string>()))
+            .ThrowsAsync(new InvalidOperationException("Request failed"));
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            _safAuthService.GetOpenIdConfigurationAsync(openIdUrl));
     }
 }

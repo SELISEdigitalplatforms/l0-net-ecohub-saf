@@ -1,4 +1,4 @@
-[![NuGet Version](https://img.shields.io/nuget/v/SeliseBlocks.Ecohub.SAF?style=flat-square)](https://www.nuget.org/packages/SeliseBlocks.Ecohub.SAF/1.0.0-beta.2)
+[![NuGet Version](https://img.shields.io/nuget/v/SeliseBlocks.Ecohub.SAF?style=flat-square)](https://www.nuget.org/packages/SeliseBlocks.Ecohub.SAF/1.0.0-beta.4)
 
 # SeliseBlocks.Ecohub.SAF
 
@@ -43,6 +43,85 @@ This method registers the following services:
 ### 1. Authentication
 
 The `ISafAuthService` interface provides methods for handling authentication with the SAF API.
+
+#### Enroll Technical User
+
+To enroll a technical user in the SAF system, use the `EnrolTechUserAsync` method:
+
+```csharp
+Task<SafTechUserEnrolmentResponse> EnrolTechUserAsync(SafTechUserEnrolmentRequest request);
+```
+
+- **Parameters**:
+  - `SafTechUserEnrolmentRequest`: Contains the technical user's enrollment information.
+    - `Iak`: (Required) The IAK identifier
+    - `IdpUserId`: (Required) The IDP user identifier
+    - `LicenceKey`: (Required) The license key
+    - `Password`: (Required) The user's password
+    - `RequestId`: A unique identifier for the request
+    - `RequestTime`: The timestamp of the request
+    - `UserAgent`: Information about the user agent
+
+- **Returns**: A `SafTechUserEnrolmentResponse` object containing:
+  - `TechUserCert`: The technical user certificate
+  - `OAuth2`: OAuth2 configuration including:
+    - `ClientId`: The client identifier
+    - `ClientSecret`: The client secret
+    - `OpenIdConfigurationEndpoint`: The OpenID configuration endpoint
+
+**Example**:
+
+```csharp
+var request = new SafTechUserEnrolmentRequest
+{
+    Iak = "your-iak",
+    IdpUserId = "your-user-id",
+    LicenceKey = "your-licence-key",
+    Password = "your-password",
+    RequestId = Guid.NewGuid().ToString(),
+    RequestTime = DateTime.UtcNow.ToString("o"),
+    UserAgent = new SafUserAgent
+    {
+        Name = "Chrome",
+        Version = "126.0.6478.270"
+    }
+};
+
+var response = await authService.EnrolTechUserAsync(request);
+Console.WriteLine($"Tech User Cert: {response.TechUserCert}");
+Console.WriteLine($"Client ID: {response.OAuth2.ClientId}");
+```
+
+#### Get OpenID Configuration
+
+To retrieve the OpenID configuration, use the `GetOpenIdConfigurationAsync` method:
+
+```csharp
+Task<SafOpenIdConfigurationResponse> GetOpenIdConfigurationAsync(Uri openIdUrl);
+```
+
+- **Parameters**:
+  - `openIdUrl`: The URL of the OpenID configuration endpoint
+
+- **Returns**: A `SafOpenIdConfigurationResponse` object containing:
+  - `TokenEndpoint`: The token endpoint URL
+  - `Issuer`: The token issuer
+  - `AuthorizationEndpoint`: The authorization endpoint
+  - `UserinfoEndpoint`: The user info endpoint
+  - `DeviceAuthorizationEndpoint`: The device authorization endpoint
+  - `EndSessionEndpoint`: The end session endpoint
+  - Various supported methods and configurations
+
+**Example**:
+
+```csharp
+var openIdUrl = new Uri("https://your-openid-config-url");
+var config = await authService.GetOpenIdConfigurationAsync(openIdUrl);
+
+Console.WriteLine($"Token Endpoint: {config.TokenEndpoint}");
+Console.WriteLine($"Issuer: {config.Issuer}");
+Console.WriteLine($"Auth Endpoint: {config.AuthorizationEndpoint}");
+```
 
 #### Retrieve Bearer Token
 
@@ -150,6 +229,125 @@ Task<SafMemberPublicKeyResponse> GetMemberPublicKey(string bearerToken, string i
 var publicKeyResponse = await apiService.GetMemberPublicKey("your-bearer-token", "12345");
 Console.WriteLine($"Public Key: {publicKeyResponse.Key}");
 ```
+
+#### Upload Member Public Key
+
+To upload the public key of a member, use the `UploadMemberPublicKey` method:
+
+```csharp
+Task<SafMemberPublicKeyResponse> UploadMemberPublicKey(SafMemberPublicKeyUploadRequest request);
+```
+
+- **Parameters**:
+  - `SafMemberPublicKeyUploadRequest`: Contains the bearer token and payload for uploading public key of a member.
+    - `Payload` includes:
+      - `Version`: The version of the public key.
+      - `Key`: The public key to be uploaded.
+      - `ExpireInDays`: Expire in days of the public key.
+
+- **Returns**: A `SafMemberPublicKeyResponse` object containing the member's public key and related metadata.
+
+**Example**:
+
+```csharp
+var request = new SafMemberPublicKeyUploadRequest
+{
+    BearerToken = "your-bearer-token",
+    Payload = new SafMemberVerifyDecryptedKeyRequestPayload
+    {
+        Version = "saf-rsa-dev-broker-SP149-4",
+        Key = "your-public-Key",
+        ExpireInDays = "7"
+    }
+};
+var receiversResponse = await apiService.UploadMemberPublicKey(request);
+Console.WriteLine($"KeyId: {receiversResponse.KeyId}");
+```
+
+#### Retrieve Member's Encrypted Public Key
+
+To retrieve the encrypted public key of a member, use the `GetMemberEncryptedPublicKey` method:
+
+```csharp
+Task<SafMemberGetEncryptedKeyResponse> GetMemberEncryptedPublicKey(string bearerToken, string keyId);
+```
+
+- **Parameters**:
+  - `bearerToken`: The authentication token.
+  - `keyId`: The key ID of the member.
+
+- **Returns**: A `SafMemberGetEncryptedKeyResponse` object containing the member's key ID and encrypted content.
+
+**Example**:
+
+```csharp
+var request = new SafMemberPublicKeyUploadRequest
+{
+    BearerToken = "your-bearer-token",
+    Payload = new SafMemberPublicKeyUploadRequestPayload
+    {
+        Version = "saf-rsa-dev-broker-SP149-4",
+        Key = "your-public-Key",
+        ExpireInDays = "7"
+    }
+};
+var encryptedPublicKeyResponse = await apiService.GetEncryptedPublicKeyEndpoint("your-bearer-token", "12345");
+Console.WriteLine($"encryptedContent: {encryptedPublicKeyResponse.encryptedContent}");
+```
+
+#### Verify Member's Decrypted Public Key
+
+To verify the decrypted public key of a member, use the `VerifyMemberDecryptedPublicKey` method:
+
+```csharp
+Task<SafMemberVerifyDecryptedKeyResponse> VerifyMemberDecryptedPublicKey(SafMemberVerifyDecryptedKeyRequest request);
+```
+
+- **Parameters**:
+ - `SafMemberVerifyDecryptedKeyRequest`: Contains the bearer token and key ID for uploading decrypted public key of a member.
+    - `Payload` includes:
+      - `DecryptedContent`: The decrypted public key.
+
+- **Returns**: A `SafMemberVerifyDecryptedKeyResponse` object containing the verification status (Success/Fail).
+
+**Example**:
+
+```csharp
+var request = new SafMemberPublicKeyUploadRequest
+{
+    BearerToken = "your-bearer-token",
+    KeyId = "your-key-id",
+    Payload = new SafMemberPublicKeyUploadRequestPayload
+    {
+        DecryptedContent = "your-decrypted-content"
+    }
+};
+var response = await apiService.VerifyMemberDecryptedPublicKey(request);
+Console.WriteLine($"Status: {response.VerificationStatus}");
+```
+
+
+#### Activate Member's Public Key
+
+To activate the public key of a member, use the `ActivateMemberPublicKey` method:
+
+```csharp
+Task<bool> ActivateMemberPublicKey(string bearerToken, string keyId);
+```
+
+- **Parameters**:
+  - `bearerToken`: The authentication token.
+  - `keyId`: The key ID of the member.
+
+- **Returns**: A `bool` value which indicates the activation status (Success/Fail).
+
+**Example**:
+
+```csharp
+var response = await apiService.ActivateMemberPublicKey(bearerToken, keyId);
+Console.WriteLine($"Status: {response}");
+```
+
 
 ---
 

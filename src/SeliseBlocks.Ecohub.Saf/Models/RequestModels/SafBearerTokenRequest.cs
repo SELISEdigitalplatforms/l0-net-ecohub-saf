@@ -1,4 +1,4 @@
-using System;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace SeliseBlocks.Ecohub.Saf;
@@ -27,8 +27,18 @@ public class SafBearerTokenRequest
 /// </summary>
 public class SafAccessTokenRequestBody
 {
+    [Required(ErrorMessage = "GrantType is required")]
+    [JsonPropertyName("grant_type")]
     public string GrantType { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "ClientId is required")]
+    [JsonPropertyName("client_id")]
     public string ClientId { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "ClientSecret is required")]
+    [JsonPropertyName("client_secret")]
     public string ClientSecret { get; set; } = string.Empty;
+
+    [JsonPropertyName("scope")]
     public string Scope { get; set; } = string.Empty;
 }

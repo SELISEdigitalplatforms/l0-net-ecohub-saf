@@ -1,10 +1,9 @@
-using System;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 
-namespace SeliseBlocks.Ecohub.Saf;
+namespace SeliseBlocks.Ecohub.Saf.Services;
 
 public class HttpRequestGateway : IHttpRequestGateway
 {
@@ -14,15 +13,72 @@ public class HttpRequestGateway : IHttpRequestGateway
         _httpClient = httpClient;
     }
 
+    #region Get Methods
     public async Task<TResponse> GetAsync<TResponse>(
         string endpoint,
         Dictionary<string, string>? headers = null,
         string? bearerToken = null
     ) where TResponse : class
     {
+        var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
+        return await GetAsync<TResponse>(request, headers, bearerToken);
+    }
+
+    public async Task<TResponse> GetAsync<TResponse>(
+        Uri requestUri,
+        Dictionary<string, string>? headers = null,
+        string? bearerToken = null
+    ) where TResponse : class
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
+        return await GetAsync<TResponse>(request, headers, bearerToken);
+    }
+
+    #endregion Get Methods
+
+    #region Post Methods
+
+    public async Task<TResponse> PostAsync<TRequest, TResponse>(
+        string endpoint,
+        TRequest? body,
+        Dictionary<string, string>? headers = null,
+        string? bearerToken = null,
+        string? contentType = "application/json"
+    )
+    where TRequest : class
+    where TResponse : class
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+        return await PostAsync<TRequest, TResponse>(request, body, headers, bearerToken, contentType);
+    }
+
+    public async Task<TResponse> PostAsync<TRequest, TResponse>(
+        Uri url,
+        TRequest? body,
+        Dictionary<string, string>? headers = null,
+        string? bearerToken = null,
+        string? contentType = "application/json"
+    )
+    where TRequest : class
+    where TResponse : class
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, url);
+        return await PostAsync<TRequest, TResponse>(request, body, headers, bearerToken, contentType);
+
+    }
+
+    #endregion Post Methods
+
+    #region Private Methods
+
+    private async Task<TResponse> GetAsync<TResponse>(
+        HttpRequestMessage request,
+        Dictionary<string, string>? headers = null,
+        string? bearerToken = null
+    ) where TResponse : class
+    {
         try
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
             AddHeaders(request, headers, bearerToken);
 
             var response = await _httpClient.SendAsync(request);
@@ -50,39 +106,11 @@ public class HttpRequestGateway : IHttpRequestGateway
         {
             throw new InvalidOperationException("An unexpected error occurred.", ex);
         }
-    }
-
-    public async Task<TResponse> PostAsync<TRequest, TResponse>(
-        string endpoint,
-        TRequest body,
-        Dictionary<string, string>? headers = null,
-        string? bearerToken = null,
-        string? contentType = "application/json"
-    )
-    where TRequest : class
-    where TResponse : class
-    {
-        var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
-        return await PostAsync<TRequest, TResponse>(request, body, headers, bearerToken, contentType);
-    }
-
-    public async Task<TResponse> PostAsync<TRequest, TResponse>(
-        Uri url,
-        TRequest body,
-        Dictionary<string, string>? headers = null,
-        string? bearerToken = null,
-        string? contentType = "application/json"
-    )
-    where TRequest : class
-    where TResponse : class
-    {
-        var request = new HttpRequestMessage(HttpMethod.Post, url);
-        return await PostAsync<TRequest, TResponse>(request, body, headers, bearerToken, contentType);
 
     }
     private async Task<TResponse> PostAsync<TRequest, TResponse>(
         HttpRequestMessage request,
-        TRequest body,
+        TRequest? body,
         Dictionary<string, string>? headers = null,
         string? bearerToken = null,
         string? contentType = "application/json"
@@ -157,5 +185,6 @@ public class HttpRequestGateway : IHttpRequestGateway
             }
         }
     }
+    #endregion Private Methods
 
 }
