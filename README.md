@@ -248,7 +248,7 @@ Console.WriteLine($"Status: {response.VerificationStatus}");
 ```
 
 
-#### Activaet Member's Public Key
+#### Activate Member's Public Key
 
 To activate the public key of a member, use the `ActivateMemberPublicKey` method:
 
