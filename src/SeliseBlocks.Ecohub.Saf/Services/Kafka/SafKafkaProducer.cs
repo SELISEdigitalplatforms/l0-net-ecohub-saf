@@ -45,9 +45,9 @@ public class SafKafkaProducer
 
     public async Task SendAsync(SafOfferNlpiEvent eventPayload)
     {
-        var encrypted = SafCryptoUtils.CompressAndEncrypt(eventPayload.Data);
-        var encryptedEvent = eventPayload.MapToSafOfferNlpiEncryptedEvent();
-        encryptedEvent.Data = encrypted;
+        var encrypted = SafCryptoUtils.CompressAndEncryptForKafka(eventPayload.Data);
+        var encryptedEvent = eventPayload.MapToSafKafkaOfferNlpiEncryptedEvent();
+        encryptedEvent.data = encrypted;
 
         var certificate = GetClientCertificate();  // Implement your logic to get client certificate
         var publicKeyPem = certificate.ExportCertificatePem();
@@ -73,8 +73,8 @@ public class SafKafkaProducer
         var schemaRegistry = new CachedSchemaRegistryClient(schemaRegistryConfig);
 
         // Create the Kafka producer
-        using var producer = new ProducerBuilder<ProcessIdType, SafOfferNlpiEncryptedEvent>(config)
-            .SetValueSerializer(new JsonSerializer<SafOfferNlpiEncryptedEvent>(schemaRegistry, new JsonSerializerConfig
+        using var producer = new ProducerBuilder<ProcessIdType, SafOfferNlpiEncryptedKafkaEvent>(config)
+            .SetValueSerializer(new JsonSerializer<SafOfferNlpiEncryptedKafkaEvent>(schemaRegistry, new JsonSerializerConfig
             {
                 BufferBytes = 100,
                 UseLatestVersion = true,
@@ -89,7 +89,7 @@ public class SafKafkaProducer
             .Build();
 
         // Create a message to send
-        var message = new Message<ProcessIdType, SafOfferNlpiEncryptedEvent>
+        var message = new Message<ProcessIdType, SafOfferNlpiEncryptedKafkaEvent>
         {
             Key = new ProcessIdType { ProcessId = Guid.NewGuid() },
             Value = encryptedEvent
