@@ -50,17 +50,17 @@ public class SafEncryptedKafkaData
 {
     public string payload { get; set; }
 
-    public string md5PayloadHash { get; set; }
+    //public string md5PayloadHash { get; set; }
 
-    public List<SafLinks> links { get; set; }
+    //public List<SafLinks> links { get; set; }
 
     public string encryptionKey { get; set; }
 
     public string publicKeyVersion { get; set; }
 
 
-    public string message { get; set; }
+    //public string message { get; set; }
 
 
-    public string md5MessageHash { get; set; }
+    //public string md5MessageHash { get; set; }
 }

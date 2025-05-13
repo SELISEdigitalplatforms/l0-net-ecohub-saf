@@ -32,8 +32,8 @@ public static class SafCryptoUtils
             payload = encryptedData,
             encryptionKey = encryptedAesKey,
             publicKeyVersion = data.PublicKeyVersion,
-            links = data.Links,
-            message = data.Message
+            //links = data.Links,
+            //message = data.Message
         };
     }
 
