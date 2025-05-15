@@ -1,15 +1,11 @@
-﻿using SeliseBlocks.Ecohub.Saf.Helpers;
+﻿
+namespace SeliseBlocks.Ecohub.Saf.Helpers;
 
-namespace SeliseBlocks.Ecohub.Saf.Services.Kafka;
-
-public static class SafCryptoUtils
+public static class SafEventDataResolver
 {
     public static SafEncryptedData CompressAndEncrypt(SafData data)
     {
-        var compressData = GzipCompressor.CompressBytes(data.Payload);
-        var aesKey = KmsHelper.GenerateAesKey();
-        var encryptedData = KmsHelper.EncryptWithAesKey(compressData, aesKey);
-        var encryptedAesKey = KmsHelper.EncryptAesKeyWithPublicKey(aesKey, data.PublicKey);
+        var (encryptedData, encryptedAesKey) = GetEncryptedDataAndKey(data);
 
         return new SafEncryptedData
         {
@@ -23,10 +19,7 @@ public static class SafCryptoUtils
 
     public static SafEncryptedKafkaData CompressAndEncryptForKafka(SafData data)
     {
-        var compressData = GzipCompressor.CompressBytes(data.Payload);
-        var aesKey = KmsHelper.GenerateAesKey();
-        var encryptedData = KmsHelper.EncryptWithAesKey(compressData, aesKey);
-        var encryptedAesKey = KmsHelper.EncryptAesKeyWithPublicKey(aesKey, data.PublicKey);
+        var (encryptedData, encryptedAesKey) = GetEncryptedDataAndKey(data);
 
         return new SafEncryptedKafkaData
         {
@@ -34,6 +27,16 @@ public static class SafCryptoUtils
             encryptionKey = encryptedAesKey,
             publicKeyVersion = data.PublicKeyVersion
         };
+    }
+
+    private static (string encryptedData, string encryptedAesKey) GetEncryptedDataAndKey(SafData data)
+    {
+        var compressData = GzipCompressor.CompressBytes(data.Payload);
+        var aesKey = KmsHelper.GenerateAesKey();
+        var encryptedData = KmsHelper.EncryptWithAesKey(compressData, aesKey);
+        var encryptedAesKey = KmsHelper.EncryptAesKeyWithPublicKey(aesKey, data.PublicKey);
+
+        return (encryptedData, encryptedAesKey);
     }
 
     public static SafData DecryptAndDecompress(SafEncryptedData encryptedData, string privateKey)

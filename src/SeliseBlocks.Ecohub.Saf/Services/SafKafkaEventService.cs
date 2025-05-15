@@ -1,9 +1,8 @@
 ﻿using Confluent.Kafka;
 using Confluent.SchemaRegistry.Serdes;
 using Confluent.SchemaRegistry;
-using SeliseBlocks.Ecohub.Saf.Services.Kafka;
+using SeliseBlocks.Ecohub.Saf.Helpers;
 using System.Security.Cryptography.X509Certificates;
-using SeliseBlocks.Ecohub.Saf.Models;
 
 namespace SeliseBlocks.Ecohub.Saf.Services;
 
@@ -26,22 +25,23 @@ public class SafKafkaEventService : ISafKafkaEventService
         return certificate;
     }
 
-    public async Task<bool> ProduceEventAsync(SafOfferNlpiKafkaEvent eventPayload)
+    public async Task<bool> ProduceEventAsync(SafProduceKafkaEventRequest request)
     {
-        try 
+        SetDefaultValue(request);
+        try
         {
-            var encrypted = SafCryptoUtils.CompressAndEncryptForKafka(eventPayload.Data);
-            var encryptedEvent = eventPayload.MapToSafKafkaOfferNlpiEncryptedEvent();
+            var encrypted = SafEventDataResolver.CompressAndEncryptForKafka(request.EventPayload.Data);
+            var encryptedEvent = request.EventPayload.MapToSafKafkaOfferNlpiEncryptedEvent();
             encryptedEvent.data = encrypted;
 
-            var certificate = GetTechUserCertificate(eventPayload.TechUserCertificate, eventPayload.TechUserPassword);
+            var certificate = GetTechUserCertificate(request.TechUserCertificate, request.TechUserPassword);
             var publicKeyPem = certificate.ExportCertificatePem();
             var privateKey = certificate.GetRSAPrivateKey();
             var privateKeyPem = privateKey.ExportRSAPrivateKeyPem();
 
             var config = new ProducerConfig
             {
-                BootstrapServers = eventPayload.KafkaServer,
+                BootstrapServers = request.KafkaServer,
                 SecurityProtocol = SecurityProtocol.Ssl,
                 SslCertificatePem = publicKeyPem,
                 SslKeyPem = privateKeyPem
@@ -50,8 +50,8 @@ public class SafKafkaEventService : ISafKafkaEventService
             // Schema registry configuration (keep this unchanged or use DB if necessary)
             var schemaRegistryConfig = new SchemaRegistryConfig
             {
-                Url = eventPayload.SchemaRegistryUrl,
-                BasicAuthUserInfo = eventPayload.SchemaRegistryAuth
+                Url = request.SchemaRegistryUrl,
+                BasicAuthUserInfo = request.SchemaRegistryAuth
             };
 
             // Parse the JSON input
@@ -79,7 +79,7 @@ public class SafKafkaEventService : ISafKafkaEventService
                 Value = encryptedEvent
             };
 
-            var result = await producer.ProduceAsync(eventPayload.KafkaTopic, message);
+            var result = await producer.ProduceAsync(request.KafkaProducerTopic, message);
 
             Console.WriteLine($"Message sent to {result.TopicPartitionOffset}");
             return true;
@@ -91,27 +91,30 @@ public class SafKafkaEventService : ISafKafkaEventService
         }
     }
 
-    public async Task ConsumeEventAsync(SafOfferNlpiConsumeKafkaEvent eventPayload)
+    public SafOfferNlpiEvent? ConsumeEventAsync(SafConsumeKafkaEventRequest request)
     {
+        var consumerTopic = SafDriverConstant.KafkaConsumerTopic.Replace("{ecohubId}", request.EcohubId); ;
+        SafOfferNlpiEvent? response = null;
         try
         {
-            var certificate = GetTechUserCertificate(eventPayload.TechUserCertificate, eventPayload.TechUserPassword);
+            var certificate = GetTechUserCertificate(request.TechUserCertificate, request.TechUserPassword);
             var privateKey = certificate.GetRSAPrivateKey();
+            var privateKeyPem = privateKey.ExportRSAPrivateKeyPem();
 
             var config = new ConsumerConfig
             {
-                BootstrapServers = eventPayload.KafkaServer,
+                BootstrapServers = request.KafkaServer,
                 AutoOffsetReset = AutoOffsetReset.Earliest,
                 SecurityProtocol = SecurityProtocol.Ssl,
                 SslCertificatePem = certificate.ExportCertificatePem(),
-                SslKeyPem = privateKey.ExportRSAPrivateKeyPem(),
-                GroupId = eventPayload.TechUserGroupId,
+                SslKeyPem = privateKeyPem,
+                GroupId = request.GroupId,
                 EnableAutoCommit = false
             };
 
             using (var consumer = new ConsumerBuilder<Ignore, string>(config).Build())
             {
-                consumer.Subscribe(eventPayload.KafkaTopic);
+                consumer.Subscribe(consumerTopic);
 
                 CancellationTokenSource cts = new CancellationTokenSource();
                 Console.CancelKeyPress += (_, e) =>
@@ -127,6 +130,8 @@ public class SafKafkaEventService : ISafKafkaEventService
                         try
                         {
                             var consumerResult = consumer.Consume(cts.Token);
+
+                            response = ExtractConsumedData(consumerResult.Message.Value, privateKeyPem);
                         }
                         catch (ConsumeException ex)
                         {
@@ -152,5 +157,29 @@ public class SafKafkaEventService : ISafKafkaEventService
         {
             Console.WriteLine($"Error in Kafka consumer: {ex.Message}");
         }
+        return response;
     }
+
+
+    private SafOfferNlpiEvent ExtractConsumedData(string jsonData, string privateKey)
+    {
+        var eventResponse = Newtonsoft.Json.JsonConvert.DeserializeObject<SafReceiveOfferNlpiEventResponse>(jsonData);
+        var safData = eventResponse.Value.MapToSafOfferNlpiEvent();
+        safData.Data = SafEventDataResolver.DecryptAndDecompress(eventResponse.Value.Data, privateKey);
+        return safData;
+        // Process the decrypted and decompressed data as needed
+    }
+    private void SetDefaultValue(SafProduceKafkaEventRequest request)
+    {
+        request.KafkaProducerTopic = string.IsNullOrWhiteSpace(request.KafkaProducerTopic)
+        ? SafDriverConstant.KafkaProducerTopic : request.KafkaProducerTopic;
+
+        request.SchemaRegistryUrl = string.IsNullOrWhiteSpace(request.SchemaRegistryUrl)
+        ? SafDriverConstant.SchemaRegistryUrl : request.SchemaRegistryUrl;
+
+        request.SchemaRegistryAuth = string.IsNullOrWhiteSpace(request.SchemaRegistryAuth)
+        ? SafDriverConstant.SchemaRegistryAuth : request.SchemaRegistryAuth;
+
+    }
+
 }

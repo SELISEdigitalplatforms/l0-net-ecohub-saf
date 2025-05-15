@@ -57,49 +57,17 @@ public class SafEventService : ISafEventService
     private SafOfferNlpiEncryptedEvent PrepareEventRequestPayload(SafOfferNlpiEvent eventPayload)
     {
         var payload = eventPayload.MapToSafOfferNlpiEncryptedEvent();
-        payload.Data = GetCompressAndEncryptEventData(eventPayload.Data);
+        payload.Data = SafEventDataResolver.CompressAndEncrypt(eventPayload.Data);
         return payload;
     }
     private SafOfferNlpiEvent PrepareEventResponsePayload(SafReceiveOfferNlpiEventResponse eventItem, string privateKey)
     {
         var eventResponse = eventItem.Value.MapToSafOfferNlpiEvent();
 
-        var data = GetDecompressAndDecryptEventData(eventItem.Value.Data, privateKey);
+        var data = SafEventDataResolver.DecryptAndDecompress(eventItem.Value.Data, privateKey);
         eventResponse.Data = data;
         return eventResponse;
     }
 
-    private SafEncryptedData GetCompressAndEncryptEventData(SafData data)
-    {
-        var compressData = GzipCompressor.CompressBytes(data.Payload);
-        var aesKey = KmsHelper.GenerateAesKey();
-
-        var encryptedData = KmsHelper.EncryptWithAesKey(compressData, aesKey);
-        var encryptedAesKey = KmsHelper.EncryptAesKeyWithPublicKey(aesKey, data.PublicKey);
-        return new SafEncryptedData
-        {
-            Payload = encryptedData,
-            EncryptionKey = encryptedAesKey,
-            PublicKeyVersion = data.PublicKeyVersion,
-            Links = data.Links,
-            Message = data.Message
-        };
-    }
-
-    private SafData GetDecompressAndDecryptEventData(SafEncryptedData data, string privateKey)
-    {
-        var aesKey = KmsHelper.DecryptAesKeyWithPrivateKey(data.EncryptionKey, privateKey);
-
-        var decryptedData = KmsHelper.DecryptWithAesKey(data.Payload, aesKey);
-        var unZippedData = GzipCompressor.DecompressToBytes(decryptedData);
-
-        return new SafData
-        {
-            Payload = unZippedData,
-            PublicKeyVersion = data.PublicKeyVersion,
-            Links = data.Links,
-            Message = data.Message
-        };
-    }
 
 }
