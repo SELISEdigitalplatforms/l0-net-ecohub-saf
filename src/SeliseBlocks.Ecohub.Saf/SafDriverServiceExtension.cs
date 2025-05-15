@@ -27,5 +27,6 @@ public static class SafDriverServiceExtension
         services.AddScoped<ISafAuthService, SafAuthService>();
         services.AddScoped<ISafApiService, SafApiService>();
         services.AddScoped<ISafEventService, SafEventService>();
+        services.AddScoped<ISafKafkaEventService, SafKafkaEventService>();
     }
 }
