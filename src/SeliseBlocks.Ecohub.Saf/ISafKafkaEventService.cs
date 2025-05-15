@@ -4,6 +4,6 @@ namespace SeliseBlocks.Ecohub.Saf;
 
 public interface ISafKafkaEventService
 {
-    Task ProduceEventAsync(SafOfferNlpiKafkaEvent eventPayload);
+    Task<bool> ProduceEventAsync(SafOfferNlpiKafkaEvent eventPayload);
     Task ConsumeEventAsync(SafOfferNlpiConsumeKafkaEvent eventPayload);
 }

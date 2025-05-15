@@ -26,60 +26,69 @@ public class SafKafkaEventService : ISafKafkaEventService
         return certificate;
     }
 
-    public async Task ProduceEventAsync(SafOfferNlpiKafkaEvent eventPayload)
+    public async Task<bool> ProduceEventAsync(SafOfferNlpiKafkaEvent eventPayload)
     {
-        var encrypted = SafCryptoUtils.CompressAndEncryptForKafka(eventPayload.Data);
-        var encryptedEvent = eventPayload.MapToSafKafkaOfferNlpiEncryptedEvent();
-        encryptedEvent.data = encrypted;
-
-        var certificate = GetTechUserCertificate(eventPayload.TechUserCertificate, eventPayload.TechUserPassword);
-        var publicKeyPem = certificate.ExportCertificatePem();
-        var privateKey = certificate.GetRSAPrivateKey();
-        var privateKeyPem = privateKey.ExportRSAPrivateKeyPem();
-
-        var config = new ProducerConfig
+        try 
         {
-            BootstrapServers = eventPayload.KafkaServer,
-            SecurityProtocol = SecurityProtocol.Ssl,
-            SslCertificatePem = publicKeyPem,
-            SslKeyPem = privateKeyPem
-        };
+            var encrypted = SafCryptoUtils.CompressAndEncryptForKafka(eventPayload.Data);
+            var encryptedEvent = eventPayload.MapToSafKafkaOfferNlpiEncryptedEvent();
+            encryptedEvent.data = encrypted;
 
-        // Schema registry configuration (keep this unchanged or use DB if necessary)
-        var schemaRegistryConfig = new SchemaRegistryConfig
-        {
-            Url = eventPayload.SchemaRegistryUrl,
-            BasicAuthUserInfo = eventPayload.SchemaRegistryAuth
-        };
+            var certificate = GetTechUserCertificate(eventPayload.TechUserCertificate, eventPayload.TechUserPassword);
+            var publicKeyPem = certificate.ExportCertificatePem();
+            var privateKey = certificate.GetRSAPrivateKey();
+            var privateKeyPem = privateKey.ExportRSAPrivateKeyPem();
 
-        // Parse the JSON input
-        var schemaRegistry = new CachedSchemaRegistryClient(schemaRegistryConfig);
-
-        // Create the Kafka producer
-        using var producer = new ProducerBuilder<ProcessIdType, SafOfferNlpiEncryptedKafkaEvent>(config)
-            .SetValueSerializer(new JsonSerializer<SafOfferNlpiEncryptedKafkaEvent>(schemaRegistry, new JsonSerializerConfig
+            var config = new ProducerConfig
             {
-                BufferBytes = 100,
-                UseLatestVersion = true,
-                AutoRegisterSchemas = false,
-                SubjectNameStrategy = SubjectNameStrategy.Topic
-            }))
-            .SetKeySerializer(new JsonSerializer<ProcessIdType>(schemaRegistry, new JsonSerializerConfig
+                BootstrapServers = eventPayload.KafkaServer,
+                SecurityProtocol = SecurityProtocol.Ssl,
+                SslCertificatePem = publicKeyPem,
+                SslKeyPem = privateKeyPem
+            };
+
+            // Schema registry configuration (keep this unchanged or use DB if necessary)
+            var schemaRegistryConfig = new SchemaRegistryConfig
             {
-                UseLatestVersion = true,
-                AutoRegisterSchemas = false,
-            }))
-            .Build();
+                Url = eventPayload.SchemaRegistryUrl,
+                BasicAuthUserInfo = eventPayload.SchemaRegistryAuth
+            };
 
-        var message = new Message<ProcessIdType, SafOfferNlpiEncryptedKafkaEvent>
+            // Parse the JSON input
+            var schemaRegistry = new CachedSchemaRegistryClient(schemaRegistryConfig);
+
+            // Create the Kafka producer
+            using var producer = new ProducerBuilder<ProcessIdType, SafOfferNlpiEncryptedKafkaEvent>(config)
+                .SetValueSerializer(new JsonSerializer<SafOfferNlpiEncryptedKafkaEvent>(schemaRegistry, new JsonSerializerConfig
+                {
+                    BufferBytes = 100,
+                    UseLatestVersion = true,
+                    AutoRegisterSchemas = false,
+                    SubjectNameStrategy = SubjectNameStrategy.Topic
+                }))
+                .SetKeySerializer(new JsonSerializer<ProcessIdType>(schemaRegistry, new JsonSerializerConfig
+                {
+                    UseLatestVersion = true,
+                    AutoRegisterSchemas = false,
+                }))
+                .Build();
+
+            var message = new Message<ProcessIdType, SafOfferNlpiEncryptedKafkaEvent>
+            {
+                Key = new ProcessIdType { ProcessId = Guid.NewGuid() },
+                Value = encryptedEvent
+            };
+
+            var result = await producer.ProduceAsync(eventPayload.KafkaTopic, message);
+
+            Console.WriteLine($"Message sent to {result.TopicPartitionOffset}");
+            return true;
+        }
+        catch (Exception ex)
         {
-            Key = new ProcessIdType { ProcessId = Guid.NewGuid() },
-            Value = encryptedEvent
-        };
-
-        var result = await producer.ProduceAsync(eventPayload.KafkaTopic, message);
-
-        Console.WriteLine($"Message sent to {result.TopicPartitionOffset}");
+            Console.WriteLine($"Error producing Kafka event: {ex.Message}");
+            return false;
+        }
     }
 
     public async Task ConsumeEventAsync(SafOfferNlpiConsumeKafkaEvent eventPayload)
