@@ -20,6 +20,7 @@ public static class SafCryptoUtils
             Message = data.Message
         };
     }
+
     public static SafEncryptedKafkaData CompressAndEncryptForKafka(SafData data)
     {
         var compressData = GzipCompressor.CompressBytes(data.Payload);
@@ -31,9 +32,7 @@ public static class SafCryptoUtils
         {
             payload = encryptedData,
             encryptionKey = encryptedAesKey,
-            publicKeyVersion = data.PublicKeyVersion,
-            //links = data.Links,
-            //message = data.Message
+            publicKeyVersion = data.PublicKeyVersion
         };
     }
 
@@ -52,4 +51,3 @@ public static class SafCryptoUtils
         };
     }
 }
-
