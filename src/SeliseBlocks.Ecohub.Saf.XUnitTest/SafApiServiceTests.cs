@@ -262,7 +262,7 @@ public class SafApiServiceTests
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ValidationException>(() => _safApiService.VerifyMemberDecryptedPublicKey(request));
-        Assert.Equal("Invalid person request: BearerToken is required", exception.Message);
+        Assert.Equal("Invalid request: BearerToken is required", exception.Message);
     }
 
     [Fact]
@@ -278,7 +278,7 @@ public class SafApiServiceTests
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ValidationException>(() => _safApiService.VerifyMemberDecryptedPublicKey(request));
-        Assert.Equal("Invalid person request: KeyId is required", exception.Message);
+        Assert.Equal("Invalid request: KeyId is required", exception.Message);
     }
 
     [Fact]
