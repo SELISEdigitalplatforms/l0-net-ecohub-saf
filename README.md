@@ -351,7 +351,7 @@ Console.WriteLine($"Status: {response}");
 
 ---
 
-### 3. SAF Event Handling
+### 3. SAF REST Event Handling
 
 The `ISafEventService` interface provides methods for sending and receiving SAF events.
 
@@ -425,3 +425,108 @@ foreach (var receivedEvent in receivedEvents)
 ```
 
 ---
+### 3. SAF Kafka Event Handling
+
+The `ISafKafkaEventService` interface provides methods for sending and receiving SAF Kafka events.
+
+#### Produce Kafka Event
+
+To produce an Kafka event, use the `ProduceEventAsync` method:
+
+```csharp
+Task<bool> ProduceEventAsync(SafProduceKafkaEventRequest request);
+```
+
+- **Parameters**:
+  - `SafProduceKafkaEventRequest`: Contains bootstrap server, producer topic, tech user certificate and password, schema registry url and auth, and event payload.
+
+- **Returns**: A `bool`, "true" if the event was produced successfully; otherwise, "false".
+
+**Example**:
+```csharp
+var request = new SafProduceKafkaEventRequest
+{
+    var bootstrapServers = "your-server:port";
+    var topic = "your-topic";
+
+    var producer = new SafKafkaProducer(bootstrapServers, topic);
+    var payload = "test msg sent";
+    var payloadBytes = Encoding.UTF8.GetBytes(payload);
+
+    SafOfferNlpiEvent testPayload = new SafOfferNlpiEvent
+    {
+        Id = Guid.NewGuid().ToString(),
+        Source = "source-url",
+        Specversion = "version",
+        DataContentType = "application/json",
+        DataSchema = "data-schema",
+        Type = "data",
+        Subject = "request-subject",
+        Time = DateTime.UtcNow.ToString("o"),
+        UserAgent = new SafUserAgent
+        {
+            Name = "Chrome",
+            Version = "Desktop"
+        },
+
+        Data = new SafData
+        {
+            Payload = payloadBytes,
+            PublicKey = "public-key",
+            PublicKeyVersion = "public-key-version",
+        },
+        LicenceKey = "licence-key",
+        EventReceiver = new SafEventReceiver
+        {
+            Id = "receiver-Idp,
+            Category = "broker"
+        },
+        EventSender = new SafEventSender
+        {
+            Id = "sender-Idp",
+            Category = "insurer"
+        },
+        ProcessId = Guid.NewGuid().ToString(),
+        ProcessName = "process-name",
+        ProcessStatus = "active",
+        SubProcessName = "request",
+        SubProcessStatus = "Created",
+    };
+}
+
+var produceResponse = await kafkaEventService.ProduceEventAsync(request);
+Console.WriteLine($"response: {produceResponse}");
+
+```
+
+#### Consume Kafka Event
+
+To receive or consume a Kafka event, use the `ConsumeEventAsync` method:
+
+```csharp
+SafOfferNlpiEvent? ConsumeEventAsync(SafConsumeKafkaEventRequest request)
+```
+
+- **Parameters**:
+  - `SafConsumeKafkaEventRequest`: Contains bootstrap server, tech user certificate and password, group id and Echohub id.
+
+- **Returns**: A collection of `SafOfferNlpiEvent` objects containing the details of the received events.
+
+**Example**:
+
+```csharp
+var consumeRequest = new SafConsumeKafkaEventRequest
+{
+    KafkaServer = "your-server:port",
+    TechUserCertificate = "tech-user-certificate",
+    TechUserPassword = "tech-user-password",
+    GroupId = "group-id",
+    EcohubId = "your-ecohub-id"
+};
+
+var consumeEvents = await kafkaEventService.ConsumeEventAsync(receiveRequest);
+foreach (var consumeEvents in receivedEvents)
+{
+    Console.WriteLine($"Event ID: {receivedEvent.Id}");
+}
+```
