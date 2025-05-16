@@ -5,7 +5,7 @@ using SeliseBlocks.Ecohub.Saf.Services;
 
 namespace SeliseBlocks.Ecohub.Saf.XUnitTest;
 
-public class SafEventServiceTests
+public class SafRestProxyEventHandlerTests
 {
     private readonly Mock<IHttpRequestGateway> _httpRequestGatewayMock;
     private const string _testPublicKey = @"-----BEGIN PUBLIC KEY-----
@@ -47,12 +47,12 @@ BXEJV0nDz043plwyNj6Y+5zvIbfyXnb3orKNoZ9ft9V5vrkj0bWphCaUVQkkov6s
 /nSOpaKFyo4MfhPJTSDAJkc=
 -----END PRIVATE KEY-----";
     private const string _testAesKey = "MIIBUwIBADANBgkqhkiG9w0BAQEFAASCAT0wggE5AgEAAkEAu6vD4pfDJLCCygmiqGhnRotEmjx2Dx8edcCjfBAeh4QLQhI8paZpaiJSmSgnFkRjUvb8Dhd/GWzlOaqulY+NIQIDAQABAkAxng0RKIyoc55wqjF+EvRTG1kM6jVQdCrKeR8AGwbnTtb/DWyXsnzcO01Ik5TOY1M6+MqhChl3G8PDSJ46RPCtAiEA3RiaPz2y7TiXa6kh/MBn6oiPCP1ZGK2AtZRLPFCZl2sCIQDZTFDbbDCz9QX3lyRUWtpk7d1mHjFTEFEGXW32V2lsowIgPcfnKi7KdcEvhrT/O0pkf0PjfCaXI+8vnQ2wLE11bbsCIHYY1fEK8cU8K4wOZr45ymwEIsm3KxN70K1m5bZ2d2OFAiAvFNT/gmfDGu5p12+SyNh4xhZscLkMC4PSQKTK9/Krkw==";
-    private readonly SafEventService _safEventService;
+    private readonly SafRestProxyEventHandler _safEventService;
 
-    public SafEventServiceTests()
+    public SafRestProxyEventHandlerTests()
     {
         _httpRequestGatewayMock = new Mock<IHttpRequestGateway>();
-        _safEventService = new SafEventService(_httpRequestGatewayMock.Object);
+        _safEventService = new SafRestProxyEventHandler(_httpRequestGatewayMock.Object);
     }
 
     [Fact]

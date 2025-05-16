@@ -2,11 +2,11 @@ using SeliseBlocks.Ecohub.Saf.Helpers;
 
 namespace SeliseBlocks.Ecohub.Saf.Services;
 
-public class SafEventService : ISafEventService
+public class SafRestProxyEventHandler : ISafRestProxyEventHandler
 {
     private readonly IHttpRequestGateway _httpRequestGateway;
 
-    public SafEventService(IHttpRequestGateway httpRequestGateway)
+    public SafRestProxyEventHandler(IHttpRequestGateway httpRequestGateway)
     {
         _httpRequestGateway = httpRequestGateway;
     }

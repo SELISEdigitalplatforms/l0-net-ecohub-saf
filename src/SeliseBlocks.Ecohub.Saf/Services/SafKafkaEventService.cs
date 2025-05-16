@@ -6,25 +6,8 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace SeliseBlocks.Ecohub.Saf.Services;
 
-public class SafKafkaEventService : ISafKafkaEventService
+public class SafKafkaEventHandler : ISafKafkaEventHandler
 {
-    private class ProcessIdType
-    {
-        public Guid ProcessId { get; set; }
-    }
-
-    private static X509Certificate2 GetTechUserCertificate(string techUserCertificate, string password)
-    {
-        byte[] certificateBytes = Convert.FromBase64String(techUserCertificate);
-
-        X509Certificate2 certificate = new X509Certificate2(
-            certificateBytes,
-            password,
-            X509KeyStorageFlags.Exportable);
-
-        return certificate;
-    }
-
     public async Task<bool> ProduceEventAsync(SafProduceKafkaEventRequest request)
     {
         SetDefaultValue(request);
@@ -91,7 +74,7 @@ public class SafKafkaEventService : ISafKafkaEventService
         }
     }
 
-    public SafOfferNlpiEvent? ConsumeEventAsync(SafConsumeKafkaEventRequest request)
+    public SafOfferNlpiEvent? ConsumeEvent(SafConsumeKafkaEventRequest request)
     {
         var consumerTopic = SafDriverConstant.KafkaConsumerTopic.Replace("{ecohubId}", request.EcohubId); ;
         SafOfferNlpiEvent? response = null;
@@ -180,6 +163,24 @@ public class SafKafkaEventService : ISafKafkaEventService
         request.SchemaRegistryAuth = string.IsNullOrWhiteSpace(request.SchemaRegistryAuth)
         ? SafDriverConstant.SchemaRegistryAuth : request.SchemaRegistryAuth;
 
+    }
+
+    private static X509Certificate2 GetTechUserCertificate(string techUserCertificate, string password)
+    {
+        byte[] certificateBytes = Convert.FromBase64String(techUserCertificate);
+
+        X509Certificate2 certificate = new X509Certificate2(
+            certificateBytes,
+            password,
+            X509KeyStorageFlags.Exportable);
+
+        return certificate;
+    }
+
+
+    private class ProcessIdType
+    {
+        public Guid ProcessId { get; set; }
     }
 
 }

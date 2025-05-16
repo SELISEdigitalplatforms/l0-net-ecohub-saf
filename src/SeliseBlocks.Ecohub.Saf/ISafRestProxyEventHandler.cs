@@ -4,7 +4,7 @@ namespace SeliseBlocks.Ecohub.Saf;
 /// Interface for managing SAF events. 
 /// Provides methods to send and receive offer NLPI events to and from the SAF API.
 /// </summary>
-public interface ISafEventService
+public interface ISafRestProxyEventHandler
 {
     /// <summary>
     /// Sends an offer NLPI event to the SAF API.

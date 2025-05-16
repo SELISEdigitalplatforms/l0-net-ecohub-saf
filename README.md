@@ -34,7 +34,8 @@ This method registers the following services:
 
 - `ISafAuthService`: Handles authentication with the SAF API.
 - `ISafApiService`: Provides methods for interacting with the SAF API.
-- `ISafEventService`: Manages SAF event handling.
+- `ISafRestProxyEventHandler`: Manages SAF event handling using Rest Proxy.
+- `ISafKafkaEventHandler`: Manages SAF event handling Kafka Native.
 
 ---
 
@@ -326,7 +327,6 @@ var response = await apiService.VerifyMemberDecryptedPublicKey(request);
 Console.WriteLine($"Status: {response.VerificationStatus}");
 ```
 
-
 #### Activate Member's Public Key
 
 To activate the public key of a member, use the `ActivateMemberPublicKey` method:
@@ -348,12 +348,23 @@ var response = await apiService.ActivateMemberPublicKey(bearerToken, keyId);
 Console.WriteLine($"Status: {response}");
 ```
 
-
 ---
 
-### 3. SAF REST Event Handling
+### 3. SAF Event Handling
 
-The `ISafEventService` interface provides methods for sending and receiving SAF events.
+The SAF event handling can be implemented using either of the following approaches:
+
+3.a. REST Proxy - Using `ISafRestProxyEventHandler`
+3.b. Kafka Native - Using `ISafKafkaEventHandler`
+
+Choose the approach that best suits your application's requirements:
+
+- Use REST Proxy (3.a) for simpler HTTP-based integration
+- Use Kafka Native (3.b) for direct Kafka connectivity with better performance
+
+### 3.a. SAF Event Handling using REST Proxy
+
+The `ISafRestProxyEventHandler` interface provides methods for sending and receiving SAF events.
 
 #### Send Offer NLPI Event
 
@@ -389,7 +400,7 @@ var sendRequest = new SafSendOfferNlpiEventRequest
     }
 };
 
-var sendResponse = await eventService.SendOfferNlpiEventAsync(sendRequest);
+var sendResponse = await restProxyEventHandler.SendOfferNlpiEventAsync(sendRequest);
 Console.WriteLine($"Schema ID: {sendResponse.ValueSchemaId}");
 ```
 
@@ -417,7 +428,7 @@ var receiveRequest = new SafReceiveOfferNlpiEventRequest
     PrivateKey = "your-private-key"
 };
 
-var receivedEvents = await eventService.ReceiveOfferNlpiEventAsync(receiveRequest);
+var receivedEvents = await restProxyEventHandler.ReceiveOfferNlpiEventAsync(receiveRequest);
 foreach (var receivedEvent in receivedEvents)
 {
     Console.WriteLine($"Event ID: {receivedEvent.Id}");
@@ -425,9 +436,10 @@ foreach (var receivedEvent in receivedEvents)
 ```
 
 ---
-### 3. SAF Kafka Event Handling
 
-The `ISafKafkaEventService` interface provides methods for sending and receiving SAF Kafka events.
+### 3.b. SAF Event Handling using Kafka Native
+
+The `ISafKafkaEventHandler` interface provides methods for sending and receiving SAF Kafka events.
 
 #### Produce Kafka Event
 
@@ -443,6 +455,7 @@ Task<bool> ProduceEventAsync(SafProduceKafkaEventRequest request);
 - **Returns**: A `bool`, "true" if the event was produced successfully; otherwise, "false".
 
 **Example**:
+
 ```csharp
 var request = new SafProduceKafkaEventRequest
 {
@@ -494,17 +507,17 @@ var request = new SafProduceKafkaEventRequest
     };
 }
 
-var produceResponse = await kafkaEventService.ProduceEventAsync(request);
+var produceResponse = await kafkaEventHandler.ProduceEventAsync(request);
 Console.WriteLine($"response: {produceResponse}");
 
 ```
 
 #### Consume Kafka Event
 
-To receive or consume a Kafka event, use the `ConsumeEventAsync` method:
+To receive or consume a Kafka event, use the `ConsumeEvent` method:
 
 ```csharp
-SafOfferNlpiEvent? ConsumeEventAsync(SafConsumeKafkaEventRequest request)
+SafOfferNlpiEvent? ConsumeEvent(SafConsumeKafkaEventRequest request)
 ```
 
 - **Parameters**:
@@ -524,7 +537,7 @@ var consumeRequest = new SafConsumeKafkaEventRequest
     EcohubId = "your-ecohub-id"
 };
 
-var consumeEvents = await kafkaEventService.ConsumeEventAsync(receiveRequest);
+var consumeEvents = await kafkaEventHandler.ConsumeEvent(receiveRequest);
 foreach (var consumeEvents in receivedEvents)
 {
     Console.WriteLine($"Event ID: {receivedEvent.Id}");

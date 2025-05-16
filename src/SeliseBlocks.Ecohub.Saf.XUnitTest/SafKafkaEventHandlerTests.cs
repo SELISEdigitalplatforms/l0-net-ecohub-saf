@@ -1,16 +1,13 @@
 ﻿using SeliseBlocks.Ecohub.Saf.Services;
-using SeliseBlocks.Ecohub.Saf;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Runtime.InteropServices.JavaScript;
 
-public class SafKafkaEventServiceTests
+namespace SeliseBlocks.Ecohub.Saf.XUnitTest;
+public class SafKafkaEventHandlerTests
 {
     [Fact]
     public async Task ProduceEventAsync_ReturnsFalse_OnException()
     {
         // Arrange
-        var service = new SafKafkaEventService();
+        var service = new SafKafkaEventHandler();
         var request = new SafProduceKafkaEventRequest
         {
             KafkaServer = null, // This will cause an exception
@@ -33,7 +30,7 @@ public class SafKafkaEventServiceTests
     public void ConsumeEventAsync_ReturnsNull_OnException()
     {
         // Arrange
-        var service = new SafKafkaEventService();
+        var service = new SafKafkaEventHandler();
         var request = new SafConsumeKafkaEventRequest
         {
             KafkaServer = null, // This will cause an exception
@@ -44,7 +41,7 @@ public class SafKafkaEventServiceTests
         };
 
         // Act
-        var result = service.ConsumeEventAsync(request);
+        var result = service.ConsumeEvent(request);
 
         // Assert
         Assert.Null(result);

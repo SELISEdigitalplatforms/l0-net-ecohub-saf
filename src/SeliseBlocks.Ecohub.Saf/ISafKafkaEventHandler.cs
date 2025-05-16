@@ -1,7 +1,7 @@
 ﻿
 namespace SeliseBlocks.Ecohub.Saf;
 
-public interface ISafKafkaEventService
+public interface ISafKafkaEventHandler
 {
     /// <summary>
     /// Asynchronously produces an event to a Kafka topic.
@@ -44,5 +44,5 @@ public interface ISafKafkaEventService
     /// <returns>
     /// The deserialized <see cref="SafOfferNlpiEvent"/> if a message is successfully consumed and processed; otherwise, null.
     /// </returns>
-    SafOfferNlpiEvent? ConsumeEventAsync(SafConsumeKafkaEventRequest request);
+    SafOfferNlpiEvent? ConsumeEvent(SafConsumeKafkaEventRequest request);
 }
