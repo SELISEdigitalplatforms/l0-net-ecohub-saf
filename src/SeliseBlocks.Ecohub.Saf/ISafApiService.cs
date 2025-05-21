@@ -89,6 +89,6 @@ public interface ISafApiService
     /// <param name="bearerToken">Authentication token</param>
     /// <param name="keyId">Key identifier</param>
     /// <returns>
-    /// A <see cref="SafCommonResponse"/> indicating activation success or failure
-    Task<SafCommonResponse> ActivateMemberPublicKey(string bearerToken, string keyId);
+    /// A <see cref="SafDynamicResponse"/> indicating activation success or failure
+    Task<SafDynamicResponse> ActivateMemberPublicKey(string bearerToken, string keyId);
 }

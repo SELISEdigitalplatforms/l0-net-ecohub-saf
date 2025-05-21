@@ -144,9 +144,9 @@ public class SafApiService : ISafApiService
     }
 
 
-    public async Task<SafCommonResponse> ActivateMemberPublicKey(string bearerToken, string keyId)
+    public async Task<SafDynamicResponse> ActivateMemberPublicKey(string bearerToken, string keyId)
     {
-        var response = new SafCommonResponse();
+        var response = new SafDynamicResponse();
 
         if (string.IsNullOrEmpty(bearerToken))
         {
@@ -175,12 +175,12 @@ public class SafApiService : ISafApiService
                 requestBody: null,
                 headers: null,
                 bearerToken: bearerToken);
-            response = safResponse.MapToDerivedResponse<dynamic, SafCommonResponse>();
+            response = safResponse.MapToDerivedResponse<dynamic, SafDynamicResponse>();
             return response;
         }
         catch (Exception ex)
         {
-            return new SafCommonResponse
+            return new SafDynamicResponse
             {
                 Error = new SafError
                 {
