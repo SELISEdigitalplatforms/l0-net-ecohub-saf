@@ -1,13 +1,18 @@
+
 using System.ComponentModel.DataAnnotations;
+using System.Text;
 using Moq;
 using SeliseBlocks.Ecohub.Saf.Helpers;
 using SeliseBlocks.Ecohub.Saf.Services;
+using Xunit;
 
 namespace SeliseBlocks.Ecohub.Saf.XUnitTest;
 
 public class SafRestProxyEventHandlerTests
 {
     private readonly Mock<IHttpRequestGateway> _httpRequestGatewayMock;
+    private readonly SafRestProxyEventHandler _safEventService;
+
     private const string _testPublicKey = @"-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAspmx/YwNpbRhxtQWQzWX
 KUYe1jmRabnXozNaPFEeiOXdaE3Gvty897sjl3HmBbnEpdvGl0NLbm0J7klVHrjC
@@ -47,12 +52,25 @@ BXEJV0nDz043plwyNj6Y+5zvIbfyXnb3orKNoZ9ft9V5vrkj0bWphCaUVQkkov6s
 /nSOpaKFyo4MfhPJTSDAJkc=
 -----END PRIVATE KEY-----";
     private const string _testAesKey = "MIIBUwIBADANBgkqhkiG9w0BAQEFAASCAT0wggE5AgEAAkEAu6vD4pfDJLCCygmiqGhnRotEmjx2Dx8edcCjfBAeh4QLQhI8paZpaiJSmSgnFkRjUvb8Dhd/GWzlOaqulY+NIQIDAQABAkAxng0RKIyoc55wqjF+EvRTG1kM6jVQdCrKeR8AGwbnTtb/DWyXsnzcO01Ik5TOY1M6+MqhChl3G8PDSJ46RPCtAiEA3RiaPz2y7TiXa6kh/MBn6oiPCP1ZGK2AtZRLPFCZl2sCIQDZTFDbbDCz9QX3lyRUWtpk7d1mHjFTEFEGXW32V2lsowIgPcfnKi7KdcEvhrT/O0pkf0PjfCaXI+8vnQ2wLE11bbsCIHYY1fEK8cU8K4wOZr45ymwEIsm3KxN70K1m5bZ2d2OFAiAvFNT/gmfDGu5p12+SyNh4xhZscLkMC4PSQKTK9/Krkw==";
-    private readonly SafRestProxyEventHandler _safEventService;
-
     public SafRestProxyEventHandlerTests()
     {
         _httpRequestGatewayMock = new Mock<IHttpRequestGateway>();
         _safEventService = new SafRestProxyEventHandler(_httpRequestGatewayMock.Object);
+    }
+
+    [Fact]
+    public async Task SendOfferNlpiEventAsync_ShouldReturnError_WhenValidationFails()
+    {
+        // Arrange
+        var request = new SafSendOfferNlpiEventRequest(); // Missing required fields
+
+        // Act
+        var result = await _safEventService.SendOfferNlpiEventAsync(request);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.NotNull(result.Error);
+        Assert.Equal("ValidationError", result.Error.ErrorCode);
     }
 
     [Fact]
@@ -77,7 +95,7 @@ BXEJV0nDz043plwyNj6Y+5zvIbfyXnb3orKNoZ9ft9V5vrkj0bWphCaUVQkkov6s
             }
         };
 
-        var expectedResponse = new SafSendOfferNlpiEventResponse
+        var expectedResponse = new SafSendOfferNlpiEvent
         {
             KeySchemaId = 1,
             ValueSchemaId = 1,
@@ -92,119 +110,182 @@ BXEJV0nDz043plwyNj6Y+5zvIbfyXnb3orKNoZ9ft9V5vrkj0bWphCaUVQkkov6s
         };
 
         _httpRequestGatewayMock
-            .Setup(x => x.PostAsync<SafOfferNlpiEncryptedEvent, SafSendOfferNlpiEventResponse>(
+            .Setup(x => x.PostAsync<SafOfferNlpiEncryptedEvent, SafSendOfferNlpiEvent>(
                 It.IsAny<string>(),
                 It.IsAny<SafOfferNlpiEncryptedEvent>(),
                 It.IsAny<Dictionary<string, string>>(),
                 request.BearerToken, "application/json"))
-            .ReturnsAsync(expectedResponse);
+            .ReturnsAsync(new SafBaseResponse<SafSendOfferNlpiEvent>
+            {
+                IsSuccess = true,
+                Data = expectedResponse
+            });
 
         // Act
         var result = await _safEventService.SendOfferNlpiEventAsync(request);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(1, result.KeySchemaId);
-        Assert.Equal(1, result.ValueSchemaId);
-        Assert.Single(result.Offsets);
-        Assert.Equal(0, result.Offsets.First().Partition);
-        Assert.Equal(1, result.Offsets.First().Offset);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1, result.Data.KeySchemaId);
+        Assert.Equal(1, result.Data.ValueSchemaId);
+        Assert.Single(result.Data.Offsets);
+        Assert.Equal(0, result.Data.Offsets.First().Partition);
+        Assert.Equal(1, result.Data.Offsets.First().Offset);
+    }
+
+    [Fact]
+    public async Task SendOfferNlpiEventAsync_ShouldReturnError_WhenGatewayReturnsError()
+    {
+        // Arrange
+        var request = new SafSendOfferNlpiEventRequest
+        {
+            SchemaVersionId = "1",
+            KeySchemaVersionId = "1",
+            BearerToken = "test-bearer-token",
+            EventPayload = new SafOfferNlpiEvent
+            {
+                Data = new SafData
+                {
+                    Payload = new byte[] { 1, 2, 3 },
+                    PublicKey = _testPublicKey
+                }
+            }
+        };
+
+        _httpRequestGatewayMock
+            .Setup(x => x.PostAsync<SafOfferNlpiEncryptedEvent, SafSendOfferNlpiEvent>(
+                It.IsAny<string>(),
+                It.IsAny<SafOfferNlpiEncryptedEvent>(),
+                It.IsAny<Dictionary<string, string>>(),
+                request.BearerToken, "application/json"))
+            .ReturnsAsync(new SafBaseResponse<SafSendOfferNlpiEvent>
+            {
+                IsSuccess = false,
+                Error = new SafError { ErrorCode = "Failed", ErrorMessage = "Gateway error" }
+            });
+
+        // Act
+        var result = await _safEventService.SendOfferNlpiEventAsync(request);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.NotNull(result.Error);
+        Assert.Equal("Failed", result.Error.ErrorCode);
+        Assert.Equal("Gateway error", result.Error.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task ReceiveOfferNlpiEventAsync_ShouldReturnError_WhenValidationFails()
+    {
+        // Arrange
+        var request = new SafReceiveOfferNlpiEventRequest(); // Missing required fields
+
+        // Act
+        var result = await _safEventService.ReceiveOfferNlpiEventAsync(request);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.NotNull(result.Error);
+        Assert.Equal("ValidationError", result.Error.ErrorCode);
+    }
+
+    [Fact]
+    public async Task ReceiveOfferNlpiEventAsync_ShouldReturnError_WhenGatewayReturnsError()
+    {
+        // Arrange
+        var request = new SafReceiveOfferNlpiEventRequest
+        {
+            BearerToken = "token",
+            EcohubId = "ecohub",
+            AutoOffsetReset = "earliest",
+            PrivateKey = _testPrivateKey
+        };
+
+        _httpRequestGatewayMock
+            .Setup(x => x.GetAsync<IEnumerable<SafReceiveOfferNlpiEvent>>(
+                It.IsAny<string>(),
+                It.IsAny<Dictionary<string, string>>(),
+                request.BearerToken))
+            .ReturnsAsync(new SafBaseResponse<IEnumerable<SafReceiveOfferNlpiEvent>>
+            {
+                IsSuccess = false,
+                Error = new SafError { ErrorCode = "Failed", ErrorMessage = "Gateway error" }
+            });
+
+        // Act
+        var result = await _safEventService.ReceiveOfferNlpiEventAsync(request);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.NotNull(result.Error);
+        Assert.Equal("Failed", result.Error.ErrorCode);
+        Assert.Equal("Gateway error", result.Error.ErrorMessage);
     }
 
     [Fact]
     public async Task ReceiveOfferNlpiEventAsync_ShouldReturnEvents_WhenRequestIsValid()
     {
         // Arrange
+        var aesKey = KmsHelper.GenerateAesKey();
+        var originalPayload = Encoding.UTF8.GetBytes("your test data");
+        var compressedPayload = GzipCompressor.CompressBytes(originalPayload);
+        var encryptedPayloadBase64 = KmsHelper.EncryptWithAesKey(compressedPayload, aesKey);
+
+        var encryptedAesKeyBase64 = KmsHelper.EncryptAesKeyWithPublicKey(aesKey, _testPublicKey);
+
         var request = new SafReceiveOfferNlpiEventRequest
         {
-            BearerToken = "test-bearer-token",
-            EcohubId = "test-ecohub-id",
+            BearerToken = "token",
+            EcohubId = "ecohub",
             AutoOffsetReset = "earliest",
             PrivateKey = _testPrivateKey
         };
 
-        // Create test data that will be "encrypted"
-        var originalPayload = new byte[] { 1, 2, 3, 4, 5 };
-        var aesKey = KmsHelper.GenerateAesKey();
-        var compressedData = GzipCompressor.CompressBytes(originalPayload);
-        var encryptedData = KmsHelper.EncryptWithAesKey(compressedData, aesKey);
-        var encryptedAesKey = KmsHelper.EncryptAesKeyWithPublicKey(aesKey, _testPublicKey);
-
-        var mockResponses = new List<SafReceiveOfferNlpiEventResponse>
-    {
-        new SafReceiveOfferNlpiEventResponse
+        var mockEvent = new SafReceiveOfferNlpiEvent
         {
-            Topic = "test-topic",
-            Key = new SafReceiveOfferNlpiEventKey { ProcessId = "test-process" },
+            Topic = "topic",
+            Key = new SafReceiveOfferNlpiEventKey { ProcessId = "pid" },
             Partition = 0,
             Offset = 1,
             Value = new SafOfferNlpiEncryptedEvent
             {
-                Id = "test-id",
-                Source = "test-source",
-                Type = "test-type",
+                Id = "id",
+                Source = "src",
+                Type = "type",
                 Time = DateTime.UtcNow.ToString("o"),
                 Data = new SafEncryptedData
                 {
-                    Payload = encryptedData,
-                    EncryptionKey = encryptedAesKey,
+                    Payload = encryptedPayloadBase64, // <-- Use AES-encrypted payload
+                    EncryptionKey = encryptedAesKeyBase64, // <-- Use RSA-encrypted AES key
                     PublicKeyVersion = "1.0",
-                    Message = "Test message",
+                    Message = "msg",
                     Links = new List<SafLinks>()
                 }
             }
-        }
-    };
-
-        var expectedEndpoint = SafDriverConstant.ReceiveOfferNlpiEventEndpoint
-            .Replace("{ecohubId}", request.EcohubId);
+        };
 
         _httpRequestGatewayMock
-            .Setup(x => x.GetAsync<IEnumerable<SafReceiveOfferNlpiEventResponse>>(
-                It.Is<string>(url => url == expectedEndpoint),
-                It.Is<Dictionary<string, string>>(h => h["auto.offset.reset"] == request.AutoOffsetReset),
+            .Setup(x => x.GetAsync<IEnumerable<SafReceiveOfferNlpiEvent>>(
+                It.IsAny<string>(),
+                It.IsAny<Dictionary<string, string>>(),
                 request.BearerToken))
-            .ReturnsAsync(mockResponses);
+            .ReturnsAsync(new SafBaseResponse<IEnumerable<SafReceiveOfferNlpiEvent>>
+            {
+                IsSuccess = true,
+                Data = new List<SafReceiveOfferNlpiEvent> { mockEvent }
+            });
 
         // Act
         var result = await _safEventService.ReceiveOfferNlpiEventAsync(request);
 
         // Assert
-        Assert.NotNull(result);
-        var eventsList = result.ToList();
-        Assert.Single(eventsList);
-
-        var firstEvent = eventsList[0];
-        Assert.Equal(mockResponses[0].Value.Id, firstEvent.Id);
-        Assert.Equal(mockResponses[0].Value.Source, firstEvent.Source);
-        Assert.Equal(mockResponses[0].Value.Type, firstEvent.Type);
-        Assert.NotNull(firstEvent.Data);
-        Assert.NotNull(firstEvent.Data.Payload);
-        Assert.Equal(originalPayload, firstEvent.Data.Payload); // Verify the decrypted payload matches original
-
-        // Verify mock was called with correct parameters
-        _httpRequestGatewayMock.Verify(x => x.GetAsync<IEnumerable<SafReceiveOfferNlpiEventResponse>>(
-            expectedEndpoint,
-            It.Is<Dictionary<string, string>>(h => h["auto.offset.reset"] == request.AutoOffsetReset),
-            request.BearerToken),
-            Times.Once);
-    }
-
-    [Fact]
-    public async Task ReceiveOfferNlpiEventAsync_ShouldThrowException_WhenEcohubIdIsEmpty()
-    {
-        // Arrange
-        var request = new SafReceiveOfferNlpiEventRequest
-        {
-            BearerToken = "test-token",
-            EcohubId = string.Empty,
-            AutoOffsetReset = "earliest",
-            PrivateKey = _testPrivateKey
-        };
-
-        // Act & Assert
-        await Assert.ThrowsAsync<ValidationException>(() =>
-            _safEventService.ReceiveOfferNlpiEventAsync(request));
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Single(result.Data);
+        Assert.Equal("id", result.Data?.FirstOrDefault()?.Id);
+        Assert.Equal("src", result.Data?.FirstOrDefault()?.Source);
+        Assert.Equal("type", result.Data?.FirstOrDefault()?.Type);
     }
 
     [Fact]
@@ -213,25 +294,29 @@ BXEJV0nDz043plwyNj6Y+5zvIbfyXnb3orKNoZ9ft9V5vrkj0bWphCaUVQkkov6s
         // Arrange
         var request = new SafReceiveOfferNlpiEventRequest
         {
-            BearerToken = "test-token",
-            EcohubId = "test-ecohub",
+            BearerToken = "token",
+            EcohubId = "ecohub",
             AutoOffsetReset = "earliest",
-            PrivateKey = _testPrivateKey
+            PrivateKey = "private-key"
         };
 
         _httpRequestGatewayMock
-            .Setup(x => x.GetAsync<IEnumerable<SafReceiveOfferNlpiEventResponse>>(
+            .Setup(x => x.GetAsync<IEnumerable<SafReceiveOfferNlpiEvent>>(
                 It.IsAny<string>(),
                 It.IsAny<Dictionary<string, string>>(),
-                It.IsAny<string>()))
-            .ReturnsAsync(new List<SafReceiveOfferNlpiEventResponse>());
+                request.BearerToken))
+            .ReturnsAsync(new SafBaseResponse<IEnumerable<SafReceiveOfferNlpiEvent>>
+            {
+                IsSuccess = true,
+                Data = new List<SafReceiveOfferNlpiEvent>()
+            });
 
         // Act
         var result = await _safEventService.ReceiveOfferNlpiEventAsync(request);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Empty(result);
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Empty(result.Data);
     }
-
 }

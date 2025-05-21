@@ -2,7 +2,7 @@ using System;
 
 namespace SeliseBlocks.Ecohub.Saf;
 
-internal static class SafOfferNlpiEventMapper
+public static class SafOfferNlpiEventMapper
 {
     public static SafOfferNlpiEncryptedEvent MapToSafOfferNlpiEncryptedEvent(this SafOfferNlpiEvent eventPayload)
     {

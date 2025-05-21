@@ -14,21 +14,21 @@ public class HttpRequestGateway : IHttpRequestGateway
     }
 
     #region Get Methods
-    public async Task<TResponse> GetAsync<TResponse>(
+    public async Task<SafBaseResponse<TResponse>> GetAsync<TResponse>(
         string endpoint,
         Dictionary<string, string>? headers = null,
-        string? bearerToken = null
-    ) where TResponse : class
+        string? bearerToken = null)
+        where TResponse : class
     {
         var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
         return await GetAsync<TResponse>(request, headers, bearerToken);
     }
 
-    public async Task<TResponse> GetAsync<TResponse>(
+    public async Task<SafBaseResponse<TResponse>> GetAsync<TResponse>(
         Uri requestUri,
         Dictionary<string, string>? headers = null,
-        string? bearerToken = null
-    ) where TResponse : class
+        string? bearerToken = null)
+        where TResponse : class
     {
         var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
         return await GetAsync<TResponse>(request, headers, bearerToken);
@@ -38,32 +38,28 @@ public class HttpRequestGateway : IHttpRequestGateway
 
     #region Post Methods
 
-    public async Task<TResponse> PostAsync<TRequest, TResponse>(
-        string endpoint,
-        TRequest? body,
-        Dictionary<string, string>? headers = null,
-        string? bearerToken = null,
-        string? contentType = "application/json"
-    )
+    public async Task<SafBaseResponse<TResponse>> PostAsync<TRequest, TResponse>(string endpoint
+    , TRequest? requestBody
+    , Dictionary<string, string>? headers = null
+    , string? bearerToken = null
+    , string? contentType = "application/json")
     where TRequest : class
     where TResponse : class
     {
         var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
-        return await PostAsync<TRequest, TResponse>(request, body, headers, bearerToken, contentType);
+        return await PostAsync<TRequest, TResponse>(request, requestBody, headers, bearerToken, contentType);
     }
 
-    public async Task<TResponse> PostAsync<TRequest, TResponse>(
-        Uri url,
-        TRequest? body,
-        Dictionary<string, string>? headers = null,
-        string? bearerToken = null,
-        string? contentType = "application/json"
-    )
+    public async Task<SafBaseResponse<TResponse>> PostAsync<TRequest, TResponse>(Uri url
+    , TRequest? requestBody
+    , Dictionary<string, string>? headers = null
+    , string? bearerToken = null
+    , string? contentType = "application/json")
     where TRequest : class
     where TResponse : class
     {
         var request = new HttpRequestMessage(HttpMethod.Post, url);
-        return await PostAsync<TRequest, TResponse>(request, body, headers, bearerToken, contentType);
+        return await PostAsync<TRequest, TResponse>(request, requestBody, headers, bearerToken, contentType);
 
     }
 
@@ -71,44 +67,72 @@ public class HttpRequestGateway : IHttpRequestGateway
 
     #region Private Methods
 
-    private async Task<TResponse> GetAsync<TResponse>(
+    private async Task<SafBaseResponse<TResponse>> GetAsync<TResponse>(
         HttpRequestMessage request,
         Dictionary<string, string>? headers = null,
-        string? bearerToken = null
-    ) where TResponse : class
+        string? bearerToken = null)
+        where TResponse : class
     {
+        var response = new SafBaseResponse<TResponse>();
         try
         {
             AddHeaders(request, headers, bearerToken);
 
-            var response = await _httpClient.SendAsync(request);
-            response.EnsureSuccessStatusCode();
+            var httpResponse = await _httpClient.SendAsync(request);
 
-            var responseContent = await response.Content.ReadAsStringAsync();
-            if (string.IsNullOrWhiteSpace(responseContent) || responseContent == "[]" || responseContent == "{}")
+            if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK
+                        || httpResponse.StatusCode == System.Net.HttpStatusCode.BadRequest
+                        || httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound
+                        || httpResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized
+                        || httpResponse.StatusCode == System.Net.HttpStatusCode.Forbidden
+                        || httpResponse.StatusCode == System.Net.HttpStatusCode.Conflict
+                        || httpResponse.StatusCode == System.Net.HttpStatusCode.InternalServerError)
             {
-                return null!;
+                var responseContent = await httpResponse.Content.ReadAsStringAsync();
+                if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    response.IsSuccess = true;
+                    response.Data = JsonSerializer.Deserialize<TResponse>(responseContent);
+                }
+                else
+                {
+                    response.IsSuccess = false;
+                    response.Error = await httpResponse.Content.ReadFromJsonAsync<SafError>();
+                }
             }
-
-            return JsonSerializer.Deserialize<TResponse>(responseContent)
-                   ?? throw new InvalidOperationException("Failed to deserialize response.");
 
         }
         catch (HttpRequestException ex)
         {
-            throw new InvalidOperationException("HTTP request failed.", ex);
+            response.IsSuccess = false;
+            response.Error = new SafError
+            {
+                ErrorMessage = ex.Message,
+                ErrorCode = "HTTP request failed"
+            };
         }
         catch (JsonException ex)
         {
-            throw new InvalidOperationException("Failed to deserialize response.", ex);
+            response.IsSuccess = false;
+            response.Error = new SafError
+            {
+                ErrorMessage = ex.Message,
+                ErrorCode = "Deserialization error"
+            };
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException("An unexpected error occurred.", ex);
+            response.IsSuccess = false;
+            response.Error = new SafError
+            {
+                ErrorMessage = ex.Message,
+                ErrorCode = "Unexpected error"
+            };
         }
+        return response;
 
     }
-    private async Task<TResponse> PostAsync<TRequest, TResponse>(
+    private async Task<SafBaseResponse<TResponse>> PostAsync<TRequest, TResponse>(
         HttpRequestMessage request,
         TRequest? body,
         Dictionary<string, string>? headers = null,
@@ -118,6 +142,9 @@ public class HttpRequestGateway : IHttpRequestGateway
     where TRequest : class
     where TResponse : class
     {
+
+        // var response = (TResponse)Activator.CreateInstance<TResponse>();
+        var response = new SafBaseResponse<TResponse>();
         try
         {
             AddHeaders(request, headers, bearerToken);
@@ -138,30 +165,53 @@ public class HttpRequestGateway : IHttpRequestGateway
                 );
             }
 
-            var response = await _httpClient.SendAsync(request);
-            response.EnsureSuccessStatusCode();
-
-            var responseContent = await response.Content.ReadAsStringAsync();
-            if (string.IsNullOrWhiteSpace(responseContent) || responseContent == "[]" || responseContent == "{}")
+            var httpResponse = await _httpClient.SendAsync(request);
+            if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK
+            || httpResponse.StatusCode == System.Net.HttpStatusCode.BadRequest
+            || httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound
+            || httpResponse.StatusCode == System.Net.HttpStatusCode.InternalServerError)
             {
-                return null!;
+                var responseContent = await httpResponse.Content.ReadAsStringAsync();
+                if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    response.IsSuccess = true;
+                    response.Data = await httpResponse.Content.ReadFromJsonAsync<TResponse>();
+                }
+                else
+                {
+                    response.IsSuccess = false;
+                    response.Error = await httpResponse.Content.ReadFromJsonAsync<SafError>();
+                }
             }
-
-            return await response.Content.ReadFromJsonAsync<TResponse>()
-                   ?? throw new InvalidOperationException("Failed to deserialize response.");
         }
         catch (HttpRequestException ex)
         {
-            throw new InvalidOperationException("HTTP request failed.", ex);
+            response.IsSuccess = false;
+            response.Error = new SafError
+            {
+                ErrorMessage = ex.Message,
+                ErrorCode = "HTTP request failed"
+            };
         }
         catch (JsonException ex)
         {
-            throw new InvalidOperationException("Failed to deserialize response.", ex);
+            response.IsSuccess = false;
+            response.Error = new SafError
+            {
+                ErrorMessage = ex.Message,
+                ErrorCode = "Deserialization error"
+            };
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException("An unexpected error occurred.", ex);
+            response.IsSuccess = false;
+            response.Error = new SafError
+            {
+                ErrorMessage = ex.Message,
+                ErrorCode = "Unexpected error"
+            };
         }
+        return response;
     }
 
     // Helper to add headers/bearer token

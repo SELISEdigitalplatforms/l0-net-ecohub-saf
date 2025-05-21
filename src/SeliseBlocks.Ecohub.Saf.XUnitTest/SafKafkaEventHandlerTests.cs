@@ -1,10 +1,29 @@
 ﻿using SeliseBlocks.Ecohub.Saf.Services;
+using Xunit;
 
 namespace SeliseBlocks.Ecohub.Saf.XUnitTest;
+
 public class SafKafkaEventHandlerTests
 {
     [Fact]
-    public async Task ProduceEventAsync_ReturnsFalse_OnException()
+    public async Task ProduceEventAsync_ReturnsValidationError_WhenRequestIsInvalid()
+    {
+        // Arrange
+        var service = new SafKafkaEventHandler();
+        var request = new SafProduceKafkaEventRequest(); // Missing required fields
+
+        // Act
+        var result = await service.ProduceEventAsync(request);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.False(result.IsSuccess);
+        Assert.NotNull(result.Error);
+        Assert.Equal("ValidationError", result.Error.ErrorCode);
+    }
+
+    [Fact]
+    public async Task ProduceEventAsync_ReturnsError_OnException()
     {
         // Arrange
         var service = new SafKafkaEventHandler();
@@ -23,11 +42,14 @@ public class SafKafkaEventHandlerTests
         var result = await service.ProduceEventAsync(request);
 
         // Assert
-        Assert.False(result);
+        Assert.NotNull(result);
+        Assert.False(result.IsSuccess);
+        Assert.NotNull(result.Error);
+        Assert.Equal("ValidationError", result.Error.ErrorCode);
     }
 
     [Fact]
-    public void ConsumeEventAsync_ReturnsNull_OnException()
+    public void ConsumeEvent_ReturnsError_OnException()
     {
         // Arrange
         var service = new SafKafkaEventHandler();
@@ -44,6 +66,10 @@ public class SafKafkaEventHandlerTests
         var result = service.ConsumeEvent(request);
 
         // Assert
-        Assert.Null(result);
+        Assert.NotNull(result);
+        Assert.False(result.IsSuccess);
+        Assert.NotNull(result.Error);
+        Assert.Equal("Exception", result.Error.ErrorCode);
+        Assert.Contains("The input is not a valid Base-64 string", result.Error.ErrorMessage);
     }
 }

@@ -44,7 +44,7 @@ public class ValidationHelperTests
     }
 
     [Fact]
-    public void Validate_ShouldThrow_WhenRequiredPropertyIsMissing()
+    public void Validate_ShouldReturnValidationError_WhenRequiredPropertyIsMissing()
     {
         // Arrange
         var model = new TestModel
@@ -54,12 +54,12 @@ public class ValidationHelperTests
         };
 
         // Act & Assert
-        var exception = Assert.Throws<ValidationException>(() => model.Validate());
-        Assert.Contains("Name is required", exception.Message);
+        var errorResponse = model.Validate();
+        Assert.Contains("Name is required", errorResponse.Error.ErrorMessage);
     }
 
     [Fact]
-    public void Validate_ShouldThrow_WhenRangeValidationFails()
+    public void Validate_ShouldReturnValidationError_WhenRangeValidationFails()
     {
         // Arrange
         var model = new TestModel
@@ -70,12 +70,12 @@ public class ValidationHelperTests
         };
 
         // Act & Assert
-        var exception = Assert.Throws<ValidationException>(() => model.Validate());
-        Assert.Contains("Age must be between 1 and 100", exception.Message);
+        var errorResponse = model.Validate();
+        Assert.Contains("Age must be between 1 and 100", errorResponse.Error.ErrorMessage);
     }
 
     [Fact]
-    public void Validate_ShouldThrow_WhenEmailFormatIsInvalid()
+    public void Validate_ShouldReturnValidationError_WhenEmailFormatIsInvalid()
     {
         // Arrange
         var model = new TestModel
@@ -86,12 +86,12 @@ public class ValidationHelperTests
         };
 
         // Act & Assert
-        var exception = Assert.Throws<ValidationException>(() => model.Validate());
-        Assert.Contains("Invalid email format", exception.Message);
+        var errorResponse = model.Validate();
+        Assert.Contains("Invalid email format", errorResponse.Error.ErrorMessage);
     }
 
     [Fact]
-    public void Validate_ShouldThrow_WhenMultipleValidationsFail()
+    public void Validate_ShouldReturnValidationError_WhenMultipleValidationsFail()
     {
         // Arrange
         var model = new TestModel
@@ -101,9 +101,9 @@ public class ValidationHelperTests
         };
 
         // Act & Assert
-        var exception = Assert.Throws<ValidationException>(() => model.Validate());
-        Assert.Contains("Name is required", exception.Message);
-        Assert.Contains("Age must be between 1 and 100", exception.Message);
-        Assert.Contains("Invalid email format", exception.Message);
+        var errorResponse = model.Validate();
+        Assert.Contains("Name is required", errorResponse.Error.ErrorMessage);
+        Assert.Contains("Age must be between 1 and 100", errorResponse.Error.ErrorMessage);
+        Assert.Contains("Invalid email format", errorResponse.Error.ErrorMessage);
     }
 }

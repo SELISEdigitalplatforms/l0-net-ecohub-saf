@@ -13,7 +13,11 @@ public class SafRestProxyEventHandler : ISafRestProxyEventHandler
 
     public async Task<SafSendOfferNlpiEventResponse> SendOfferNlpiEventAsync(SafSendOfferNlpiEventRequest request)
     {
-        request.Validate();
+        var validation = request.Validate();
+        if (!validation.IsSuccess)
+        {
+            return validation.MapToResponse<SafSendOfferNlpiEvent, SafSendOfferNlpiEventResponse>();
+        }
 
         var header = new Dictionary<string, string>
         {
@@ -22,36 +26,51 @@ public class SafRestProxyEventHandler : ISafRestProxyEventHandler
         };
 
         var payload = PrepareEventRequestPayload(request.EventPayload);
-        var response = await _httpRequestGateway.PostAsync<SafOfferNlpiEncryptedEvent, SafSendOfferNlpiEventResponse>(
+        var response = await _httpRequestGateway.PostAsync<SafOfferNlpiEncryptedEvent, SafSendOfferNlpiEvent>(
             endpoint: SafDriverConstant.SendOfferNlpiEventEndpoint,
-            request: payload,
+            requestBody: payload,
             headers: header,
             bearerToken: request.BearerToken);
 
-        return response;
+        return response.MapToDerivedResponse<SafSendOfferNlpiEvent, SafSendOfferNlpiEventResponse>();
     }
-    public async Task<IEnumerable<SafOfferNlpiEvent>> ReceiveOfferNlpiEventAsync(SafReceiveOfferNlpiEventRequest request)
+    public async Task<SafReceiveOfferNlpiEventResponse> ReceiveOfferNlpiEventAsync(SafReceiveOfferNlpiEventRequest request)
     {
-        request.Validate();
+        var validation = request.Validate();
+        if (!validation.IsSuccess)
+        {
+            return validation.MapToResponse<IEnumerable<SafOfferNlpiEvent>, SafReceiveOfferNlpiEventResponse>();
+        }
 
         var endpoint = SafDriverConstant.ReceiveOfferNlpiEventEndpoint.Replace("{ecohubId}", request.EcohubId);
         var header = new Dictionary<string, string>
         {
             { "auto.offset.reset", request.AutoOffsetReset }
         };
-        var eventResponses = await _httpRequestGateway.GetAsync<IEnumerable<SafReceiveOfferNlpiEventResponse>>(
+        var eventResponse = await _httpRequestGateway.GetAsync<IEnumerable<SafReceiveOfferNlpiEvent>>(
             endpoint: endpoint,
             headers: header,
             bearerToken: request.BearerToken);
 
+        if (!eventResponse.IsSuccess)
+            return new SafReceiveOfferNlpiEventResponse
+            {
+                IsSuccess = false,
+                Error = eventResponse.Error
+            };
+
         var events = new List<SafOfferNlpiEvent>();
-        foreach (var eventItem in eventResponses)
+        foreach (var eventItem in eventResponse.Data)
         {
-            var eventResponse = PrepareEventResponsePayload(eventItem, request.PrivateKey);
-            events.Add(eventResponse);
+            var eventResponsePayload = PrepareEventResponsePayload(eventItem, request.PrivateKey);
+            events.Add(eventResponsePayload);
         }
 
-        return events;
+        return new SafReceiveOfferNlpiEventResponse
+        {
+            IsSuccess = true,
+            Data = events
+        };
     }
 
     private SafOfferNlpiEncryptedEvent PrepareEventRequestPayload(SafOfferNlpiEvent eventPayload)
@@ -60,7 +79,7 @@ public class SafRestProxyEventHandler : ISafRestProxyEventHandler
         payload.Data = SafEventDataResolver.CompressAndEncrypt(eventPayload.Data);
         return payload;
     }
-    private SafOfferNlpiEvent PrepareEventResponsePayload(SafReceiveOfferNlpiEventResponse eventItem, string privateKey)
+    private SafOfferNlpiEvent PrepareEventResponsePayload(SafReceiveOfferNlpiEvent eventItem, string privateKey)
     {
         var eventResponse = eventItem.Value.MapToSafOfferNlpiEvent();
 

@@ -7,52 +7,53 @@ namespace SeliseBlocks.Ecohub.Saf;
 public interface ISafRestProxyEventHandler
 {
     /// <summary>
-    /// Sends an offer NLPI event to the SAF API.
+    /// Sends an encrypted offer NLPI event to the SAF API.
     /// </summary>
     /// <param name="request">
-    /// The request object containing the details of the offer NLPI event to be sent.
-    /// This includes:
-    /// - <see cref="SafSendOfferNlpiEventRequest.SchemaVersionId"/>: The schema version ID for the event payload.
-    /// - <see cref="SafSendOfferNlpiEventRequest.KeySchemaVersionId"/>: The schema version ID for the key.
-    /// - <see cref="SafSendOfferNlpiEventRequest.BearerToken"/>: The bearer token for authentication.
-    /// - <see cref="SafSendOfferNlpiEventRequest.EventPayload"/>: The event payload to be sent.
+    /// The request object containing:
+    /// <list type="bullet">
+    ///   <item><description><see cref="SafSendOfferNlpiEventRequest.SchemaVersionId"/>: Schema version ID for the event (required)</description></item>
+    ///   <item><description><see cref="SafSendOfferNlpiEventRequest.KeySchemaVersionId"/>: Schema version ID for the key (required)</description></item>
+    ///   <item><description><see cref="SafSendOfferNlpiEventRequest.BearerToken"/>: Authentication token (required)</description></item>
+    ///   <item><description><see cref="SafSendOfferNlpiEventRequest.EventPayload"/>: Event data to be encrypted and sent (required)</description></item>
+    /// </list>
     /// </param>
     /// <returns>
-    /// A task that represents the asynchronous operation. The task result contains a 
-    /// <see cref="SafSendOfferNlpiEventResponse"/> object, which includes information about the 
-    /// schema IDs and offsets of the sent event.
+    /// A <see cref="SafSendOfferNlpiEventResponse"/> containing:
+    /// <list type="bullet">
+    ///   <item><description><c>IsSuccess</c>: Indicates if the operation succeeded</description></item>
+    ///   <item><description><c>Error</c>: Error details if the operation failed</description></item>
+    ///   <item><description><c>Data</c>: Response data including:
+    ///     <list type="bullet">
+    ///       <item><description>KeySchemaId: Schema ID used for the key</description></item>
+    ///       <item><description>ValueSchemaId: Schema ID used for the value</description></item>
+    ///       <item><description>Offsets: Collection of partition offsets and any errors</description></item>
+    ///     </list>
+    ///   </description></item>
+    /// </list>
     /// </returns>
-    /// <exception cref="HttpRequestException">
-    /// Thrown if there is an issue with the HTTP request, such as a network error or invalid response.
-    /// </exception>
-    /// <exception cref="JsonException">
-    /// Thrown if there is an issue serializing or deserializing the request or response.
-    /// </exception>    
     Task<SafSendOfferNlpiEventResponse> SendOfferNlpiEventAsync(SafSendOfferNlpiEventRequest request);
 
     /// <summary>
-    /// Asynchronously receives an offer NLPI event from the SAF API.
+    /// Receives and decrypts offer NLPI events from the SAF API.
     /// </summary>
     /// <param name="request">
-    /// The request object containing the details required to receive the offer NLPI event.
-    /// This includes:
-    /// - <see cref="SafReceiveOfferNlpiEventRequest.BearerToken"/>: The bearer token for authentication.
-    /// - <see cref="SafReceiveOfferNlpiEventRequest.EcohubId"/>: The Ecohub ID to identify the target Ecohub.
-    /// - <see cref="SafReceiveOfferNlpiEventRequest.AutoOffsetReset"/>: The auto-offset reset configuration (e.g., "earliest" or "latest").
-    /// - <see cref="SafReceiveOfferNlpiEventRequest.PrivateKey"/>: The private key for decryption or authentication purposes.
+    /// The request object containing:
+    /// <list type="bullet">
+    ///   <item><description><see cref="SafReceiveOfferNlpiEventRequest.BearerToken"/>: Authentication token (required)</description></item>
+    ///   <item><description><see cref="SafReceiveOfferNlpiEventRequest.EcohubId"/>: Target Ecohub identifier (required)</description></item>
+    ///   <item><description><see cref="SafReceiveOfferNlpiEventRequest.PrivateKey"/>: Private key for decryption (required)</description></item>
+    ///   <item><description><see cref="SafReceiveOfferNlpiEventRequest.AutoOffsetReset"/>: Offset reset strategy ("earliest" or "latest")</description></item>
+    /// </list>
     /// </param>
     /// <returns>
-    /// A task that represents the asynchronous operation. The task result contains a collection of 
-    /// <see cref="SafOfferNlpiEvent"/> objects, which include the details of the received events.
+    /// A <see cref="SafReceiveOfferNlpiEventResponse"/> containing:
+    /// <list type="bullet">
+    ///   <item><description><c>IsSuccess</c>: Indicates if the operation succeeded</description></item>
+    ///   <item><description><c>Error</c>: Error details if the operation failed</description></item>
+    ///   <item><description><c>Data</c>: Collection of decrypted <see cref="SafOfferNlpiEvent"/> objects</description></item>
+    /// </list>
     /// </returns>
-    /// <exception cref="HttpRequestException">
-    /// Thrown if there is an issue with the HTTP request, such as a network error or invalid response.
-    /// </exception>
-    /// <exception cref="JsonException">
-    /// Thrown if there is an issue deserializing the response from the SAF API.
-    /// </exception>
-    /// <exception cref="UnauthorizedAccessException">
-    /// Thrown if the bearer token is invalid or expired.
-    /// </exception>
-    Task<IEnumerable<SafOfferNlpiEvent>> ReceiveOfferNlpiEventAsync(SafReceiveOfferNlpiEventRequest request);
+    /// <exception cref="CryptographicException">When decryption fails</exception>
+    Task<SafReceiveOfferNlpiEventResponse> ReceiveOfferNlpiEventAsync(SafReceiveOfferNlpiEventRequest request);
 }

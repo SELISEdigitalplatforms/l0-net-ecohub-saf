@@ -1,12 +1,7 @@
-﻿namespace SeliseBlocks.Ecohub.Saf;
+using System;
 
-public class SafMemberVerifyDecryptedKeyResponse
-{
-    public string VerificationStatus { get; set; } = string.Empty;
-}
+namespace SeliseBlocks.Ecohub.Saf;
 
-public static class VerificationStatus
+public class SafMemberVerifyDecryptedKeyResponse : SafBaseResponse<SafMemberVerifyDecryptedKey>
 {
-    public const string Success = "Success";
-    public const string Fail = "Fail";
 }

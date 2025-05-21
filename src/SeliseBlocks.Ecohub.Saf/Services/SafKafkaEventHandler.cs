@@ -8,8 +8,16 @@ namespace SeliseBlocks.Ecohub.Saf.Services;
 
 public class SafKafkaEventHandler : ISafKafkaEventHandler
 {
-    public async Task<bool> ProduceEventAsync(SafProduceKafkaEventRequest request)
+    public async Task<SafProduceEventResponse> ProduceEventAsync(SafProduceKafkaEventRequest request)
     {
+        var validation = request.Validate();
+        if (!validation.IsSuccess)
+        {
+            return new SafProduceEventResponse
+            {
+                Error = validation.Error
+            };
+        }
         SetDefaultValue(request);
         try
         {
@@ -65,19 +73,30 @@ public class SafKafkaEventHandler : ISafKafkaEventHandler
             var result = await producer.ProduceAsync(request.KafkaProducerTopic, message);
 
             Console.WriteLine($"Message sent to {result.TopicPartitionOffset}");
-            return true;
+            return new SafProduceEventResponse
+            {
+                IsSuccess = true
+            };
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error producing Kafka event: {ex.Message}");
-            return false;
+            return new SafProduceEventResponse
+            {
+                IsSuccess = false,
+                Error = new SafError
+                {
+                    ErrorCode = "exception",
+                    ErrorMessage = ex.Message
+                }
+            };
         }
     }
 
-    public SafOfferNlpiEvent? ConsumeEvent(SafConsumeKafkaEventRequest request)
+    public SafConsumeEventResponse ConsumeEvent(SafConsumeKafkaEventRequest request)
     {
         var consumerTopic = SafDriverConstant.KafkaConsumerTopic.Replace("{ecohubId}", request.EcohubId); ;
-        SafOfferNlpiEvent? response = null;
+        var response = new SafConsumeEventResponse();
+        SafOfferNlpiEvent? eventResponse = null;
         try
         {
             var certificate = GetTechUserCertificate(request.TechUserCertificate, request.TechUserPassword);
@@ -114,21 +133,35 @@ public class SafKafkaEventHandler : ISafKafkaEventHandler
                         {
                             var consumerResult = consumer.Consume(cts.Token);
 
-                            response = ExtractConsumedData(consumerResult.Message.Value, privateKeyPem);
+                            eventResponse = ExtractConsumedData(consumerResult.Message.Value, privateKeyPem);
+                            response.IsSuccess = true;
+                            response.Data = eventResponse;
                         }
                         catch (ConsumeException ex)
                         {
-                            Console.WriteLine($"Kafka consume error: {ex.Error.Reason}");
+                            response.Error = new SafError
+                            {
+                                ErrorMessage = ex.Message,
+                                ErrorCode = "ConsumeError"
+                            };
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine($"Error during message consumption: {ex.Message}");
+                            response.Error = new SafError
+                            {
+                                ErrorMessage = ex.Message,
+                                ErrorCode = "Exception"
+                            };
                         }
                     }
                 }
-                catch (OperationCanceledException)
+                catch (OperationCanceledException ex)
                 {
-                    Console.WriteLine("Consumer loop has been canceled.");
+                    response.Error = new SafError
+                    {
+                        ErrorMessage = ex.Message,
+                        ErrorCode = "OperationCancel"
+                    };
                 }
                 finally
                 {
@@ -138,7 +171,11 @@ public class SafKafkaEventHandler : ISafKafkaEventHandler
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error in Kafka consumer: {ex.Message}");
+            response.Error = new SafError
+            {
+                ErrorMessage = ex.Message,
+                ErrorCode = "Exception"
+            };
         }
         return response;
     }
@@ -146,7 +183,7 @@ public class SafKafkaEventHandler : ISafKafkaEventHandler
 
     private SafOfferNlpiEvent ExtractConsumedData(string jsonData, string privateKey)
     {
-        var eventResponse = Newtonsoft.Json.JsonConvert.DeserializeObject<SafReceiveOfferNlpiEventResponse>(jsonData);
+        var eventResponse = Newtonsoft.Json.JsonConvert.DeserializeObject<SafReceiveOfferNlpiEvent>(jsonData);
         var safData = eventResponse.Value.MapToSafOfferNlpiEvent();
         safData.Data = SafEventDataResolver.DecryptAndDecompress(eventResponse.Value.Data, privateKey);
         return safData;
