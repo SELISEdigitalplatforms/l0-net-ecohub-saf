@@ -16,7 +16,7 @@
 2. [Getting Started](#getting-started)
 3. [Features and Usage](#features-and-usage)
    - [Authentication (ISafAuthService)](#1-authentication-isafauthservice)
-   - [SAF API Interactions (ISafApiService)](#2-saf-api-interactions)
+   - [SAF API Interactions (ISafApiService)](#2-saf-api-interactions-isafapiservice)
    - [SAF Event Handling (ISafRestProxyEventHandler, ISafKafkaEventHandler)](#3-saf-event-handling)
 4. [Response Structure](#response-structure)
 5. [Error Handling](#error-handling)
