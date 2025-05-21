@@ -199,10 +199,10 @@ Task<SafMemberVerifyDecryptedKeyResponse> VerifyMemberDecryptedPublicKey(SafMemb
 #### Activate Member Public Key
 
 ```csharp
-Task<SafCommonResponse> ActivateMemberPublicKey(string bearerToken, string keyId);
+Task<SafDynamicResponse> ActivateMemberPublicKey(string bearerToken, string keyId);
 ```
 
-- **Response**: `SafCommonResponse`
+- **Response**: `SafDynamicResponse`
   - `IsSuccess`
   - `Data` (`dynamic`)
   - `Error` (`SafError`)
