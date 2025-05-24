@@ -5,6 +5,7 @@ namespace SeliseBlocks.Ecohub.Saf.XUnitTest;
 
 public class SafKafkaEventHandlerTests
 {
+    private static readonly Random random = new();
     [Fact]
     public async Task ProduceEventAsync_ReturnsValidationError_WhenRequestIsInvalid()
     {
@@ -32,7 +33,7 @@ public class SafKafkaEventHandlerTests
             KafkaServer = null, // This will cause an exception
             KafkaProducerTopic = "test-topic",
             TechUserCertificate = "invalid-base64", // Invalid certificate
-            TechUserPassword = "8gu765ggfd!34",
+            TechUserPassword = RandomString(7),
             SchemaRegistryUrl = "http://localhost:8081",
             SchemaRegistryAuth = "user:pass",
             EventPayload = new SafOfferNlpiEvent { Data = new SafData() }
@@ -57,7 +58,7 @@ public class SafKafkaEventHandlerTests
         {
             KafkaServer = null, // This will cause an exception
             TechUserCertificate = "invalid-base64",
-            TechUserPassword = "8gu765ggfd!34",
+            TechUserPassword = RandomString(7),
             GroupId = "group1",
             EcohubId = "ecohub1"
         };
@@ -71,5 +72,12 @@ public class SafKafkaEventHandlerTests
         Assert.NotNull(result.Error);
         Assert.Equal("Exception", result.Error.ErrorCode);
         Assert.Contains("The input is not a valid Base-64 string", result.Error.ErrorMessage);
+    }
+
+    public static string RandomString(int length)
+    {
+        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        return new string(Enumerable.Repeat(chars, length)
+            .Select(s => s[random.Next(s.Length)]).ToArray());
     }
 }
