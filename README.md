@@ -321,5 +321,3 @@ The following dependencies are required and are included in the NuGet package:
 - [System.Text.Json](https://www.nuget.org/packages/System.Text.Json)
 
 ---
-
-MIT License. See [LICENSE](LICENSE) file for details.
