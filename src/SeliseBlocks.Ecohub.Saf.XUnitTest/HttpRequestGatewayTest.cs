@@ -4,6 +4,7 @@ using System.Text.Json;
 using Moq;
 using Moq.Protected;
 using SeliseBlocks.Ecohub.Saf.Services;
+using Xunit;
 
 namespace SeliseBlocks.Ecohub.Saf.XUnitTest;
 
@@ -46,7 +47,9 @@ public class HttpRequestGatewayTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(expectedResponse.Message, ((JsonElement)result).GetProperty("Message").GetString());
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal(expectedResponse.Message, ((JsonElement)result.Data).GetProperty("Message").GetString());
     }
 
     [Fact]
@@ -76,12 +79,14 @@ public class HttpRequestGatewayTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(expectedResponse.Id, ((JsonElement)result).GetProperty("Id").GetInt32());
-        Assert.Equal(expectedResponse.Name, ((JsonElement)result).GetProperty("Name").GetString());
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal(expectedResponse.Id, ((JsonElement)result.Data).GetProperty("Id").GetInt32());
+        Assert.Equal(expectedResponse.Name, ((JsonElement)result.Data).GetProperty("Name").GetString());
     }
 
     [Fact]
-    public async Task PostAsync_ShouldThrowInvalidOperationException_WhenHttpRequestFails()
+    public async Task PostAsync_ShouldReturnError_WhenHttpRequestFails()
     {
         // Arrange
         var endpoint = "https://example.com/api/resource";
@@ -96,13 +101,19 @@ public class HttpRequestGatewayTests
             )
             .ThrowsAsync(new HttpRequestException("Request failed"));
 
-        // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            _httpRequestGateway.PostAsync<object, object>(endpoint, requestBody));
+        // Act
+        var result = await _httpRequestGateway.PostAsync<object, object>(endpoint, requestBody);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.False(result.IsSuccess);
+        Assert.NotNull(result.Error);
+        Assert.Equal("HTTP request failed", result.Error.ErrorCode);
+        Assert.Equal("Request failed", result.Error.ErrorMessage);
     }
 
     [Fact]
-    public async Task GetAsync_ShouldThrowInvalidOperationException_WhenHttpRequestFails()
+    public async Task GetAsync_ShouldReturnError_WhenHttpRequestFails()
     {
         // Arrange
         var endpoint = "https://example.com/api/resource";
@@ -116,8 +127,75 @@ public class HttpRequestGatewayTests
             )
             .ThrowsAsync(new HttpRequestException("Request failed"));
 
-        // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            _httpRequestGateway.GetAsync<object>(endpoint));
+        // Act
+        var result = await _httpRequestGateway.GetAsync<object>(endpoint);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.False(result.IsSuccess);
+        Assert.NotNull(result.Error);
+        Assert.Equal("HTTP request failed", result.Error.ErrorCode);
+        Assert.Equal("Request failed", result.Error.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task PostAsync_ShouldReturnError_WhenDeserializationFails()
+    {
+        // Arrange
+        var endpoint = "https://example.com/api/resource";
+        var requestBody = new { Name = "Test" };
+        var invalidJson = "{ invalid json }";
+
+        _httpMessageHandlerMock
+            .Protected()
+            .Setup<Task<HttpResponseMessage>>(
+                "SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>()
+            )
+            .ReturnsAsync(new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.OK,
+                Content = new StringContent(invalidJson, Encoding.UTF8, "application/json")
+            });
+
+        // Act
+        var result = await _httpRequestGateway.PostAsync<object, object>(endpoint, requestBody);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.False(result.IsSuccess);
+        Assert.NotNull(result.Error);
+        Assert.Equal("Deserialization error", result.Error.ErrorCode);
+    }
+
+    [Fact]
+    public async Task GetAsync_ShouldReturnError_WhenDeserializationFails()
+    {
+        // Arrange
+        var endpoint = "https://example.com/api/resource";
+        var invalidJson = "{ invalid json }";
+
+        _httpMessageHandlerMock
+            .Protected()
+            .Setup<Task<HttpResponseMessage>>(
+                "SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
+                ItExpr.IsAny<CancellationToken>()
+            )
+            .ReturnsAsync(new HttpResponseMessage
+            {
+                StatusCode = HttpStatusCode.OK,
+                Content = new StringContent(invalidJson, Encoding.UTF8, "application/json")
+            });
+
+        // Act
+        var result = await _httpRequestGateway.GetAsync<object>(endpoint);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.False(result.IsSuccess);
+        Assert.NotNull(result.Error);
+        Assert.Equal("Deserialization error", result.Error.ErrorCode);
     }
 }

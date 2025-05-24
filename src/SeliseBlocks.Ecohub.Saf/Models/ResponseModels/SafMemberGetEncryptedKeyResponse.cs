@@ -1,7 +1,7 @@
-﻿namespace SeliseBlocks.Ecohub.Saf;
+using System;
 
-public class SafMemberGetEncryptedKeyResponse
+namespace SeliseBlocks.Ecohub.Saf;
+
+public class SafMemberGetEncryptedKeyResponse : SafBaseResponse<SafMemberGetEncryptedKey>
 {
-    public string KeyId { get; set; } = string.Empty;
-    public string encryptedContent { get; set; } = string.Empty;
 }

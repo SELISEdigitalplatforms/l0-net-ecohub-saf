@@ -2,7 +2,7 @@ namespace SeliseBlocks.Ecohub.Saf;
 
 /// <summary>
 /// Interface for interacting with the SAF API. 
-/// Provides methods to retrieve receiver information and member public keys.
+/// Provides methods to manage member public keys and retrieve receiver information.
 /// </summary>
 public interface ISafApiService
 {
@@ -10,129 +10,85 @@ public interface ISafApiService
     /// Asynchronously retrieves receiver information from the SAF API.
     /// </summary>
     /// <param name="request">
-    /// The request object containing the bearer token and payload for obtaining receiver information.
-    /// The payload includes details such as:
-    /// - <see cref="SafReceiversRequestPayload.LicenceKey"/>: The licence key for authentication.
-    /// - <see cref="SafReceiversRequestPayload.Password"/>: The password for authentication.
-    /// - <see cref="SafReceiversRequestPayload.RequestId"/>: A unique identifier for the request.
-    /// - <see cref="SafReceiversRequestPayload.RequestTime"/>: The timestamp of the request.
-    /// - <see cref="SafReceiversRequestPayload.UserAgent"/>: Information about the user agent making the request.
+    /// The request object containing:
+    /// <list type="bullet">
+    ///   <item><description><see cref="SafReceiversRequest.BearerToken"/>: Authentication token (required)</description></item>
+    ///   <item><description><see cref="SafReceiversRequestPayload.LicenceKey"/>: The licence key</description></item>
+    ///   <item><description><see cref="SafReceiversRequestPayload.Password"/>: The password</description></item>
+    ///   <item><description><see cref="SafReceiversRequestPayload.RequestId"/>: Unique request identifier</description></item>
+    ///   <item><description><see cref="SafReceiversRequestPayload.RequestTime"/>: Request timestamp</description></item>
+    ///   <item><description><see cref="SafReceiversRequestPayload.UserAgent"/>: User agent information</description></item>
+    /// </list>
     /// </param>
     /// <returns>
-    /// A task that represents the asynchronous operation. The task result contains a collection of 
-    /// <see cref="SafReceiversResponse"/> objects, which include information about the receivers.
+    /// A <see cref="SafReceiversResponse"/> containing:
+    /// <list type="bullet">
+    ///   <item><description><c>IsSuccess</c>: Operation status</description></item>
+    ///   <item><description><c>Error</c>: Error details if failed</description></item>
+    ///   <item><description><c>Data</c>: Collection of <see cref="SafReceiver"/> objects</description></item>
+    /// </list>
     /// </returns>
-    /// <exception cref="HttpRequestException">
-    /// Thrown if there is an issue with the HTTP request, such as a network error or invalid response.
-    /// </exception>
-    /// <exception cref="JsonException">
-    /// Thrown if there is an issue deserializing the response from the SAF API.
-    /// </exception>
-    Task<IEnumerable<SafReceiversResponse>> GetReceiversAsync(SafReceiversRequest request);
-
+    Task<SafReceiversResponse> GetReceiversAsync(SafReceiversRequest request);
 
     /// <summary>
-    /// Asynchronously retrieves the public key of a member from the SAF API.
+    /// Retrieves a member's public key by their IDP number.
     /// </summary>
-    /// <param name="bearerToken">
-    /// The bearer token obtained from the SAF API after successful authentication. 
-    /// This token is used to authorize the request to retrieve the member's public key.
-    /// </param>
-    /// <param name="idpNumber">
-    /// The IDP number of the member whose public key is being requested. 
-    /// This number uniquely identifies the member in the SAF API.
-    /// </param>
+    /// <param name="bearerToken">Authentication token</param>
+    /// <param name="idpNumber">Member's IDP number</param>
     /// <returns>
-    /// A task that represents the asynchronous operation. The task result contains a 
-    /// <see cref="SafMemberPublicKeyResponse"/> object, which includes the public key and related metadata of the member.
+    /// A <see cref="SafMemberPublicKeyResponse"/> containing the member's public key details
     /// </returns>
-    /// <exception cref="HttpRequestException">
-    /// Thrown if there is an issue with the HTTP request, such as a network error or invalid response.
-    /// </exception>
-    /// <exception cref="JsonException">
-    /// Thrown if there is an issue deserializing the response from the SAF API.
-    /// </exception>
     Task<SafMemberPublicKeyResponse> GetMemberPublicKey(string bearerToken, string idpNumber);
 
     /// <summary>
-    /// Asynchronously retrieves receiver information from the SAF API.
+    /// Uploads a member's public key.
     /// </summary>
     /// <param name="request">
-    /// The request object containing the bearer token and payload for obtaining receiver information.
-    /// The payload includes details such as:
-    /// - <see cref="SafMemberPublicKeyUploadRequestPayload.Version"/>: Version of the public key.
-    /// - <see cref="SafMemberPublicKeyUploadRequestPayload.Key"/>: The public key to be uploaded.
-    /// - <see cref="SafMemberPublicKeyUploadRequestPayload.ExpireInDays"/>: Expire in days of the public key.
+    /// Upload request containing:
+    /// <list type="bullet">
+    ///   <item><description><c>BearerToken</c>: Authentication token</description></item>
+    ///   <item><description><c>Payload.Version</c>: Key version</description></item>
+    ///   <item><description><c>Payload.Key</c>: Public key data</description></item>
+    ///   <item><description><c>Payload.ExpireInDays</c>: Key expiration period</description></item>
+    /// </list>
     /// </param>
     /// <returns>
-    /// A task that represents the asynchronous operation. The task result contains a collection of 
-    /// <see cref="SafReceiversResponse"/> objects, which include information about the receivers.
+    /// A <see cref="SafMemberPublicKeyResponse"/> with the uploaded key details
     /// </returns>
-    /// <exception cref="HttpRequestException">
-    /// Thrown if there is an issue with the HTTP request, such as a network error or invalid response.
-    /// </exception>
-    /// <exception cref="JsonException">
-    /// Thrown if there is an issue deserializing the response from the SAF API.
-    /// </exception>
     Task<SafMemberPublicKeyResponse> UploadMemberPublicKey(SafMemberPublicKeyUploadRequest request);
 
     /// <summary>
-    /// Asynchronously retrieves the public key of a member from the SAF API.
+    /// Retrieves a member's encrypted public key.
     /// </summary>
-    /// <param name="bearerToken">
-    /// The bearer token obtained from the SAF API after successful authentication. 
-    /// This token is used to authorize the request to retrieve the member's public key.
-    /// </param>
-    /// <param name="keyId">
-    /// The Key ID of the member whose public key is being requested. 
-    /// This number uniquely identifies the member in the SAF API.
-    /// </param>
+    /// <param name="bearerToken">Authentication token</param>
+    /// <param name="keyId">Key identifier</param>
     /// <returns>
-    /// A task that represents the asynchronous operation. The task result contains a 
-    /// <see cref="SafMemberGetEncryptedKeyResponse"/> object, which includes the public key and related metadata of the member.
+    /// A <see cref="SafMemberGetEncryptedKeyResponse"/> containing the encrypted key
     /// </returns>
-    /// <exception cref="errorCode">
-    /// Thrown if there is an issue with the key, such as key version already exist.
-    /// </exception>
-    /// <exception cref="errorMessage">
-    /// Thrown with detailed message if there is an issue with the given key.
-    /// </exception>
     Task<SafMemberGetEncryptedKeyResponse> GetMemberEncryptedPublicKey(string bearerToken, string keyId);
 
     /// <summary>
-    /// Asynchronously retrieves the public key of a member from the SAF API.
+    /// Verifies a member's decrypted public key.
     /// </summary>
-    /// <param name="keyId">
-    /// The Key ID of the member whose public key is being requested. 
-    /// This number uniquely identifies the member in the SAF API.
+    /// <param name="request">
+    /// Verification request containing:
+    /// <list type="bullet">
+    ///   <item><description><c>BearerToken</c>: Authentication token</description></item>
+    ///   <item><description><c>KeyId</c>: Key identifier</description></item>
+    ///   <item><description><c>Payload.DecryptedContent</c>: Decrypted key content</description></item>
+    /// </list>
     /// </param>
     /// <returns>
-    /// A task that represents the asynchronous operation. The task result contains a 
-    /// <see cref="SafMemberVerifyDecryptedKeyResponse"/> object, which includes the verification status (Success/Fail).
+    /// A <see cref="SafMemberVerifyDecryptedKeyResponse"/> with verification status
     /// </returns>
-    /// <exception cref="errorCode">
-    /// Thrown if there is an issue with the key, such as key version already exist.
-    /// </exception>
-    /// <exception cref="errorMessage">
-    /// Thrown with detailed message if there is an issue with the given key.
-    /// </exception>
     Task<SafMemberVerifyDecryptedKeyResponse> VerifyMemberDecryptedPublicKey(SafMemberVerifyDecryptedKeyRequest request);
 
     /// <summary>
-    /// Asynchronously activates the public key of a member from the SAF API.
-    /// This method sends a request to the SAF API to activate the public key of a member based on the provided key ID.
-    /// The request should include the necessary authentication details and the key ID of the member.
+    /// Activates a member's public key.
     /// </summary>
-    /// <param name="bearerToken">
-    /// The bearer token obtained from the SAF API after successful authentication.
-    /// This token is used to authorize the request to retrieve the member's public key.
-    /// </param>
-    /// <param name="keyId">
-    /// The key ID of the member whose encrypted public key is being requested.
-    /// </param>
+    /// <param name="bearerToken">Authentication token</param>
+    /// <param name="keyId">Key identifier</param>
     /// <returns>
-    /// A task that represents the asynchronous operation. The task result contains a 
-    /// <see cref="true/false"/> which indicates the activation status (Success/Fail).
-    /// </returns>
-    Task<bool> ActivateMemberPublicKey(string bearerToken, string keyId);
+    /// A <see cref="SafDynamicResponse"/> indicating activation success or failure
+    Task<SafDynamicResponse> ActivateMemberPublicKey(string bearerToken, string keyId);
 }
