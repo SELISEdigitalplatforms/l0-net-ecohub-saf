@@ -26,7 +26,11 @@ public class SafAuthService : ISafAuthService
     /// <inheritdoc/>
     public async Task<SafBearerTokenResponse> GetBearerToken(SafBearerTokenRequest request)
     {
-        request.Validate();
+        var validation = request.Validate();
+        if (!validation.IsSuccess)
+        {
+            return validation.MapToResponse<SafBearerToken, SafBearerTokenResponse>();
+        }
         var formData = new Dictionary<string, string>
                         {
                             { "grant_type", request.Body.GrantType },
@@ -34,37 +38,48 @@ public class SafAuthService : ISafAuthService
                             { "client_secret", request.Body.ClientSecret },
                             { "scope", request.Body.Scope }
                         };
-        var response = await _httpRequestGateway.PostAsync<Dictionary<string, string>, SafBearerTokenResponse>(
+        var response = await _httpRequestGateway.PostAsync<Dictionary<string, string>, SafBearerToken>(
             endpoint: request.RequestUrl,
-            request: formData,
+            requestBody: formData,
             headers: null,
             bearerToken: string.Empty,
             contentType: "application/x-www-form-urlencoded");
 
-        return response;
+        return response.MapToDerivedResponse<SafBearerToken, SafBearerTokenResponse>();
     }
 
     /// <inheritdoc/>
     public async Task<SafTechUserEnrolmentResponse> EnrolTechUserAsync(SafTechUserEnrolmentRequest request)
     {
-        request.Validate();
-        var response = await _httpRequestGateway.PostAsync<SafTechUserEnrolmentRequest, SafTechUserEnrolmentResponse>(
+        var validation = request.Validate();
+        if (!validation.IsSuccess)
+        {
+            return validation.MapToResponse<SafTechUserEnrolment, SafTechUserEnrolmentResponse>();
+        }
+        var response = await _httpRequestGateway.PostAsync<SafTechUserEnrolmentRequest, SafTechUserEnrolment>(
             endpoint: SafDriverConstant.TechUserEnrolmentEndpoint,
-            request: request);
+            requestBody: request);
 
-        return response;
+        return response.MapToDerivedResponse<SafTechUserEnrolment, SafTechUserEnrolmentResponse>();
     }
 
     /// <inheritdoc/>
     public async Task<SafOpenIdConfigurationResponse> GetOpenIdConfigurationAsync(Uri openIdUrl)
     {
-        if (openIdUrl == null)
+        if (openIdUrl is null)
         {
-            throw new ArgumentNullException(nameof(openIdUrl), "OpenID URL cannot be null.");
+            return new SafOpenIdConfigurationResponse
+            {
+                Error = new SafError
+                {
+                    ErrorCode = "ValidationError",
+                    ErrorMessage = "OpenID URL cannot be null."
+                }
+            };
         }
-        var response = await _httpRequestGateway.GetAsync<SafOpenIdConfigurationResponse>(
+        var response = await _httpRequestGateway.GetAsync<SafOpenIdConfiguration>(
                         uri: openIdUrl);
 
-        return response;
+        return response.MapToDerivedResponse<SafOpenIdConfiguration, SafOpenIdConfigurationResponse>();
     }
 }

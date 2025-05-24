@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using SeliseBlocks.Ecohub.Saf.Helpers;
+using SeliseBlocks.Ecohub.Saf.Models;
 
 namespace SeliseBlocks.Ecohub.Saf.XUnitTest;
 
@@ -163,9 +164,24 @@ public class KmsHelperTests
         var key = KmsHelper.GenerateAesKey();
         var data = Encoding.UTF8.GetBytes("Test data");
         var encryptedData = KmsHelper.EncryptWithAesKey(data, key);
-        var tamperedData = encryptedData.Substring(0, encryptedData.Length - 4) + "AAAA";
+        var tamperedData = string.Concat(encryptedData.AsSpan(0, encryptedData.Length - 4), "AAAA");
 
         Assert.Throws<CryptographicException>(() =>
             KmsHelper.DecryptWithAesKey(tamperedData, key));
     }
+
+    [Fact]
+    public void GenerateKeyPair_ReturnsValidPem()
+    {
+        using var rsa = RSA.Create(2048);
+        var privateKey = PemEncoding.Write("PRIVATE KEY", rsa.ExportPkcs8PrivateKey());
+        var publicKey = PemEncoding.Write("PUBLIC KEY", rsa.ExportSubjectPublicKeyInfo());
+
+        // Try to import both
+        using var rsaPriv = RSA.Create();
+        using var rsaPub = RSA.Create();
+        rsaPriv.ImportFromPem(privateKey);
+        rsaPub.ImportFromPem(publicKey);
+    }
+
 }

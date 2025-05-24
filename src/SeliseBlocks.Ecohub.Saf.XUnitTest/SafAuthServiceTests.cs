@@ -31,7 +31,7 @@ public class SafAuthServiceTests
             }
         };
 
-        var expectedResponse = new SafBearerTokenResponse
+        var expectedResponse = new SafBearerToken
         {
             AccessToken = "test-access-token",
             TokenType = "Bearer",
@@ -39,8 +39,14 @@ public class SafAuthServiceTests
             ExtExpiresIn = 7200
         };
 
+        var safBaseResponse = new SafBaseResponse<SafBearerToken>
+        {
+            IsSuccess = true,
+            Data = expectedResponse
+        };
+
         _httpRequestGatewayMock
-            .Setup(x => x.PostAsync<Dictionary<string, string>, SafBearerTokenResponse>(
+            .Setup(x => x.PostAsync<Dictionary<string, string>, SafBearerToken>(
                 request.RequestUrl,
                 It.Is<Dictionary<string, string>>(formData =>
                     formData["grant_type"] == request.Body.GrantType &&
@@ -50,17 +56,16 @@ public class SafAuthServiceTests
                 null,
                 string.Empty,
                 "application/x-www-form-urlencoded"))
-            .ReturnsAsync(expectedResponse);
-
+            .ReturnsAsync(safBaseResponse);
         // Act
         var result = await _safAuthService.GetBearerToken(request);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("test-access-token", result.AccessToken);
-        Assert.Equal("Bearer", result.TokenType);
-        Assert.Equal(3600, result.ExpiresIn);
-        Assert.Equal(7200, result.ExtExpiresIn);
+        Assert.Equal("test-access-token", result.Data?.AccessToken);
+        Assert.Equal("Bearer", result.Data?.TokenType);
+        Assert.Equal(3600, result.Data?.ExpiresIn);
+        Assert.Equal(7200, result.Data?.ExtExpiresIn);
     }
 
     [Fact]
@@ -80,7 +85,7 @@ public class SafAuthServiceTests
         };
 
         _httpRequestGatewayMock
-            .Setup(x => x.PostAsync<Dictionary<string, string>, SafBearerTokenResponse>(
+            .Setup(x => x.PostAsync<Dictionary<string, string>, SafBearerToken>(
                 request.RequestUrl,
                 It.IsAny<Dictionary<string, string>>(),
                 null,
@@ -111,10 +116,10 @@ public class SafAuthServiceTests
             }
         };
 
-        var expectedResponse = new SafTechUserEnrolmentResponse
+        var expectedResponse = new SafTechUserEnrolment
         {
             TechUserCert = "test-cert",
-            OAuth2 = new SafTechUserEnrolmentOauth2Response
+            OAuth2 = new SafTechUserEnrolmentOauth2
             {
                 ClientId = "test-client-id",
                 ClientSecret = "test-client-secret",
@@ -122,23 +127,29 @@ public class SafAuthServiceTests
             }
         };
 
+        var safBaseResponse = new SafBaseResponse<SafTechUserEnrolment>
+        {
+            IsSuccess = true,
+            Data = expectedResponse
+        };
+
         _httpRequestGatewayMock
-            .Setup(x => x.PostAsync<SafTechUserEnrolmentRequest, SafTechUserEnrolmentResponse>(
+            .Setup(x => x.PostAsync<SafTechUserEnrolmentRequest, SafTechUserEnrolment>(
                 It.Is<string>(url => url == SafDriverConstant.TechUserEnrolmentEndpoint),
                 It.Is<SafTechUserEnrolmentRequest>(r => r.Iak == request.Iak),
                 It.IsAny<Dictionary<string, string>>(),
                 It.IsAny<string>(),
                 It.IsAny<string>()))
-            .ReturnsAsync(expectedResponse);
+            .ReturnsAsync(safBaseResponse);
 
         // Act
         var result = await _safAuthService.EnrolTechUserAsync(request);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(expectedResponse.TechUserCert, result.TechUserCert);
-        Assert.Equal(expectedResponse.OAuth2.ClientId, result.OAuth2.ClientId);
-        Assert.Equal(expectedResponse.OAuth2.ClientSecret, result.OAuth2.ClientSecret);
+        Assert.Equal(expectedResponse.TechUserCert, result.Data?.TechUserCert);
+        Assert.Equal(expectedResponse.OAuth2.ClientId, result.Data?.OAuth2.ClientId);
+        Assert.Equal(expectedResponse.OAuth2.ClientSecret, result.Data?.OAuth2.ClientSecret);
     }
 
     [Fact]
@@ -146,7 +157,7 @@ public class SafAuthServiceTests
     {
         // Arrange
         var openIdUrl = new Uri("https://test.com/openid");
-        var expectedResponse = new SafOpenIdConfigurationResponse
+        var expectedResponse = new SafOpenIdConfiguration
         {
             TokenEndpoint = "https://test.com/token",
             Issuer = "test-issuer",
@@ -161,22 +172,27 @@ public class SafAuthServiceTests
             ScopesSupported = new[] { "openid" }
         };
 
+        var safBaseResponseOpenId = new SafBaseResponse<SafOpenIdConfiguration>
+        {
+            IsSuccess = true,
+            Data = expectedResponse
+        };
+
         _httpRequestGatewayMock
-            .Setup(x => x.GetAsync<SafOpenIdConfigurationResponse>(
+            .Setup(x => x.GetAsync<SafOpenIdConfiguration>(
                 It.Is<Uri>(uri => uri == openIdUrl),
                 It.IsAny<Dictionary<string, string>>(),
                 It.IsAny<string>()))
-            .ReturnsAsync(expectedResponse);
-
+            .ReturnsAsync(safBaseResponseOpenId);
         // Act
         var result = await _safAuthService.GetOpenIdConfigurationAsync(openIdUrl);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(expectedResponse.TokenEndpoint, result.TokenEndpoint);
-        Assert.Equal(expectedResponse.Issuer, result.Issuer);
-        Assert.Equal(expectedResponse.AuthorizationEndpoint, result.AuthorizationEndpoint);
-        Assert.Equal(expectedResponse.UserinfoEndpoint, result.UserinfoEndpoint);
+        Assert.Equal(expectedResponse.TokenEndpoint, result.Data?.TokenEndpoint);
+        Assert.Equal(expectedResponse.Issuer, result.Data?.Issuer);
+        Assert.Equal(expectedResponse.AuthorizationEndpoint, result.Data?.AuthorizationEndpoint);
+        Assert.Equal(expectedResponse.UserinfoEndpoint, result.Data?.UserinfoEndpoint);
     }
 
     [Fact]
@@ -185,7 +201,7 @@ public class SafAuthServiceTests
         // Arrange
         var openIdUrl = new Uri("https://test.com/openid");
         _httpRequestGatewayMock
-            .Setup(x => x.GetAsync<SafOpenIdConfigurationResponse>(
+            .Setup(x => x.GetAsync<SafOpenIdConfiguration>(
                 It.IsAny<Uri>(),
                 It.IsAny<Dictionary<string, string>>(),
                 It.IsAny<string>()))

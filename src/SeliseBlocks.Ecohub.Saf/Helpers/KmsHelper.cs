@@ -1,5 +1,6 @@
 using System;
 using System.Security.Cryptography;
+using SeliseBlocks.Ecohub.Saf.Models;
 
 namespace SeliseBlocks.Ecohub.Saf.Helpers;
 
@@ -192,4 +193,54 @@ public class KmsHelper
             throw new Exception("An unexpected error occurred during decryption.", ex);
         }
     }
+
+
+    /// <summary>
+    /// Generates an RSA key in PEM format for the specified key type and size.
+    /// </summary>
+    /// <param name="keyType">
+    /// The type of RSA key to generate: 
+    /// <see cref="RsaKeyType.Public"/> for a public key.
+    /// <see cref="RsaKeyType.Private"/> for a private key.
+    /// <see cref="RsaKeyType.Both"/> to get both keys.
+    /// </param>
+    /// <param name="keySize">
+    /// The size of the RSA key in bits. Default is 2048.
+    /// </param>
+    /// <returns>
+    /// A dictionary containing the generated key(s) as PEM-formatted strings, keyed by <see cref="RsaKeyType"/>.
+    /// </returns>
+    /// <remarks>
+    /// The returned dictionary will contain an entry for each requested key type. Each value is a PEM-formatted string.
+    /// </remarks>
+    public static Dictionary<RsaKeyType, string> GenerateRsaKey(RsaKeyType keyType, int keySize = 2048)
+    {
+        var keys = new Dictionary<RsaKeyType, string>();
+        try
+        {
+            using var rsa = RSA.Create(keySize);
+            if (keyType == RsaKeyType.Public || keyType == RsaKeyType.Both)
+            {
+                keys[RsaKeyType.Public] = string.Concat("-----BEGIN PUBLIC KEY-----\n",
+                                           Convert.ToBase64String(rsa.ExportSubjectPublicKeyInfo())
+                                                  .Chunk(64)
+                                                  .Select(chunk => new string(chunk) + "\n"),
+                                           "-----END PUBLIC KEY-----");
+            }
+            if (keyType == RsaKeyType.Private || keyType == RsaKeyType.Both)
+            {
+                keys[RsaKeyType.Private] = string.Concat("-----BEGIN PRIVATE KEY-----\n",
+                                           Convert.ToBase64String(rsa.ExportPkcs8PrivateKey())
+                                                  .Chunk(64)
+                                                  .Select(chunk => new string(chunk) + "\n"),
+                                           "-----END PRIVATE KEY-----");
+            }
+
+        }
+        catch (Exception)
+        {
+        }
+        return keys;
+    }
 }
+

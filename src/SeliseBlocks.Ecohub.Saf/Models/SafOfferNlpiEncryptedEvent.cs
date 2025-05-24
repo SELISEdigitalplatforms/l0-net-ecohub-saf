@@ -1,40 +1,33 @@
 using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace SeliseBlocks.Ecohub.Saf;
 
 public class SafOfferNlpiEncryptedEvent : BaseSafOfferNlpiEvent
 {
-    [JsonPropertyName("data")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonProperty("data", NullValueHandling = NullValueHandling.Ignore)]
     public SafEncryptedData Data { get; set; }
 }
 public class SafEncryptedData
 {
-    [JsonPropertyName("payload")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonProperty("payload", NullValueHandling = NullValueHandling.Ignore)]
     public string Payload { get; set; }
 
-    [JsonPropertyName("md5PayloadHash")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonProperty("md5PayloadHash", NullValueHandling = NullValueHandling.Ignore)]
     public string Md5PayloadHash { get; set; }
 
-    [JsonPropertyName("links")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonProperty("links", NullValueHandling = NullValueHandling.Ignore)]
     public List<SafLinks> Links { get; set; }
 
-    [JsonPropertyName("encryptionKey")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonProperty("encryptionKey", NullValueHandling = NullValueHandling.Ignore)]
     public string EncryptionKey { get; set; }
 
-    [JsonPropertyName("publicKeyVersion")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonProperty("publicKeyVersion", NullValueHandling = NullValueHandling.Ignore)]
     public string PublicKeyVersion { get; set; }
 
-    [JsonPropertyName("message")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonProperty("message", NullValueHandling = NullValueHandling.Ignore)]
     public string Message { get; set; }
 
-    [JsonPropertyName("md5MessageHash")]
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    [JsonProperty("md5MessageHash", NullValueHandling = NullValueHandling.Ignore)]
     public string Md5MessageHash { get; set; }
 }

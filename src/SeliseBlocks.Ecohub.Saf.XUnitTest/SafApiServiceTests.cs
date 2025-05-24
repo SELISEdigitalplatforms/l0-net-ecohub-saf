@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Moq;
 using SeliseBlocks.Ecohub.Saf.Helpers;
 using SeliseBlocks.Ecohub.Saf.Services;
+using Xunit;
 
 namespace SeliseBlocks.Ecohub.Saf.XUnitTest;
 
@@ -17,335 +18,308 @@ public class SafApiServiceTests
     }
 
     [Fact]
-    public async Task GetMemberPublicKey_ShouldReturnPublicKey_WhenRequestIsSuccessful()
+    public async Task GetReceiversAsync_ShouldReturnReceivers_WhenRequestIsValid()
     {
         // Arrange
-        var bearerToken = "test-bearer-token";
-        var idpNumber = "12345";
-        var expectedResponse = new SafMemberPublicKeyResponse
+        var request = new SafReceiversRequest
         {
-            KeyId = "key-id",
-            MembershipId = "membership-id",
-            Version = "1.0",
-            Key = "public-key",
-            CreatedAt = DateTime.UtcNow,
-            LastUpdatedAt = DateTime.UtcNow,
-            ActivatedAt = DateTime.UtcNow,
-            ExpiryDate = DateTime.UtcNow.AddYears(1),
-            EcoHubStatus = "Active"
+            BearerToken = "token",
+            Payload = new SafReceiversRequestPayload { LicenceKey = "lk", Password = "pw" }
+        };
+        var expectedReceivers = new List<SafReceiver> { new SafReceiver { CompanyName = "Test" } };
+        var safBaseResponse = new SafBaseResponse<IEnumerable<SafReceiver>> { IsSuccess = true, Data = expectedReceivers };
+
+        _httpRequestGatewayMock
+    .Setup(x => x.PostAsync<SafReceiversRequestPayload, IEnumerable<SafReceiver>>(
+        It.IsAny<string>(),
+        It.IsAny<SafReceiversRequestPayload>(),
+        It.IsAny<Dictionary<string, string>>(),
+        It.IsAny<string>(),
+        It.IsAny<string>()))
+    .ReturnsAsync(safBaseResponse);
+
+        // Act
+        var result = await _safApiService.GetReceiversAsync(request);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
+        Assert.Equal("Test", result.Data.First().CompanyName);
+    }
+
+    [Fact]
+    public async Task GetReceiversAsync_ShouldReturnError_WhenValidationFails()
+    {
+        // Arrange
+        var request = new SafReceiversRequest(); // Missing required fields
+
+        // Act
+        var result = await _safApiService.GetReceiversAsync(request);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.NotNull(result.Error);
+        Assert.Equal("ValidationError", result.Error.ErrorCode);
+    }
+
+    [Fact]
+    public async Task GetMemberPublicKey_ShouldReturnPublicKey_WhenRequestIsValid()
+    {
+        // Arrange
+        var bearerToken = "token";
+        var idpNumber = "idp";
+        var safBaseResponse = new SafBaseResponse<SafMemberPublicKey>
+        {
+            IsSuccess = true,
+            Data = new SafMemberPublicKey { KeyId = "kid", Key = "pubkey" }
         };
 
         _httpRequestGatewayMock
-            .Setup(x => x.GetAsync<SafMemberPublicKeyResponse>(
-                It.Is<string>(url => url.Contains(idpNumber)),
-                null,
-                bearerToken))
-            .ReturnsAsync(expectedResponse);
+            .Setup(x => x.GetAsync<SafMemberPublicKey>(
+                It.IsAny<string>(), null, bearerToken))
+            .ReturnsAsync(safBaseResponse);
 
         // Act
         var result = await _safApiService.GetMemberPublicKey(bearerToken, idpNumber);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal("key-id", result.KeyId);
-        Assert.Equal("public-key", result.Key);
+        Assert.True(result.IsSuccess);
+        Assert.Equal("kid", result.Data.KeyId);
+        Assert.Equal("pubkey", result.Data.Key);
     }
 
     [Fact]
-    public async Task GetMemberPublicKey_ShouldThrowException_WhenRequestFails()
+    public async Task GetMemberPublicKey_ShouldReturnError_WhenBearerTokenIsNull()
     {
         // Arrange
-        var bearerToken = "test-bearer-token";
-        var idpNumber = "12345";
+        var idpNumber = "idp";
 
-        _httpRequestGatewayMock
-            .Setup(x => x.GetAsync<SafMemberPublicKeyResponse>(
-                It.Is<string>(url => url.Contains(idpNumber)),
-                null,
-                bearerToken))
-            .ThrowsAsync(new Exception("Request failed"));
+        // Act
+        var result = await _safApiService.GetMemberPublicKey(null, idpNumber);
 
-        // Act & Assert
-        await Assert.ThrowsAsync<Exception>(() => _safApiService.GetMemberPublicKey(bearerToken, idpNumber));
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal("ValidationError", result.Error.ErrorCode);
     }
 
     [Fact]
-    public async Task UploadMemberPublicKey_ShouldReturnResponse_WhenRequestIsSuccessful()
+    public async Task UploadMemberPublicKey_ShouldReturnResponse_WhenRequestIsValid()
     {
-        // Arrange  
+        // Arrange
         var request = new SafMemberPublicKeyUploadRequest
         {
-            BearerToken = "test-bearer-token",
-            Payload = new SafMemberPublicKeyUploadRequestPayload
-            {
-                Key = "public-key",
-                Version = "1.0",
-                ExpireInDays = "7"
-            }
+            BearerToken = "token",
+            Payload = new SafMemberPublicKeyUploadRequestPayload { Key = "pubkey", Version = "v1", ExpireInDays = "7" }
         };
-
-        var expectedResponse = new SafMemberPublicKeyResponse
+        var safBaseResponse = new SafBaseResponse<SafMemberPublicKey>
         {
-            KeyId = "key-id",
-            MembershipId = "membership-id",
-            Version = "1.0",
-            Key = "public-key",
-            CreatedAt = DateTime.UtcNow,
-            LastUpdatedAt = DateTime.UtcNow,
-            ActivatedAt = DateTime.UtcNow,
-            ExpiryDate = DateTime.UtcNow.AddYears(1),
-            EcoHubStatus = "Created"
+            IsSuccess = true,
+            Data = new SafMemberPublicKey { KeyId = "kid", Key = "pubkey" }
         };
 
         _httpRequestGatewayMock
-            .Setup(x => x.PostAsync<SafMemberPublicKeyUploadRequestPayload, SafMemberPublicKeyResponse>(
-                SafDriverConstant.UploadMemberPublicKeyEndpoint,
-                request.Payload,
-                null, // headers  
-                request.BearerToken,
-                "application/json")) // contentType  
-            .ReturnsAsync(expectedResponse);
-
-        // Act  
+            .Setup(x => x.PostAsync<SafMemberPublicKeyUploadRequestPayload, SafMemberPublicKey>(
+                It.IsAny<string>(),
+                It.IsAny<SafMemberPublicKeyUploadRequestPayload>(),
+                It.IsAny<Dictionary<string, string>>(),
+                It.IsAny<string>(),
+                It.IsAny<string>()))
+            .ReturnsAsync(safBaseResponse);
+        // Act
         var result = await _safApiService.UploadMemberPublicKey(request);
 
-        // Assert  
-        Assert.NotNull(result);
-        Assert.Equal("key-id", result.KeyId);
-        Assert.Equal("public-key", result.Key);
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal("kid", result.Data.KeyId);
     }
 
     [Fact]
-    public async Task UploadMemberPublicKey_ShouldThrowException_WhenRequestFails()
+    public async Task UploadMemberPublicKey_ShouldReturnError_WhenValidationFails()
     {
         // Arrange
-        var request = new SafMemberPublicKeyUploadRequest
-        {
-            BearerToken = "test-bearer-token",
-            Payload = new SafMemberPublicKeyUploadRequestPayload
-            {
-                Key = "public-key",
-                Version = "1.0",
-                ExpireInDays = "14"
-            }
-        };
+        var request = new SafMemberPublicKeyUploadRequest(); // Missing required fields
 
-        _httpRequestGatewayMock
-            .Setup(x => x.PostAsync<SafMemberPublicKeyUploadRequestPayload, SafMemberPublicKeyResponse>(
-                SafDriverConstant.UploadMemberPublicKeyEndpoint,
-                request.Payload,
-                null,
-                request.BearerToken, 
-                "application/json"))
-            .ThrowsAsync(new Exception("Request failed"));
+        // Act
+        var result = await _safApiService.UploadMemberPublicKey(request);
 
-        // Act & Assert
-        await Assert.ThrowsAsync<Exception>(() => _safApiService.UploadMemberPublicKey(request));
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal("ValidationError", result.Error.ErrorCode);
     }
 
     [Fact]
-    public async Task GetMemberEncryptedPublicKey_ShouldReturnEncryptedKey_WhenRequestIsSuccessful()
+    public async Task GetMemberEncryptedPublicKey_ShouldReturnEncryptedKey_WhenRequestIsValid()
     {
         // Arrange
-        var bearerToken = "test-bearer-token";
-        var keyId = "key-id-123";
-        var expectedResponse = new SafMemberGetEncryptedKeyResponse
+        var bearerToken = "token";
+        var keyId = "kid";
+        var safBaseResponse = new SafBaseResponse<SafMemberGetEncryptedKey>
         {
-            KeyId = keyId,
-            encryptedContent = "encrypted-public-key-content"
+            IsSuccess = true,
+            Data = new SafMemberGetEncryptedKey { KeyId = keyId, encryptedContent = "enc" }
         };
 
         _httpRequestGatewayMock
-            .Setup(x => x.GetAsync<SafMemberGetEncryptedKeyResponse>(
-                It.Is<string>(url => url.Contains(keyId)),
-                null,
-                bearerToken))
-            .ReturnsAsync(expectedResponse);
+            .Setup(x => x.GetAsync<SafMemberGetEncryptedKey>(
+                It.IsAny<string>(), null, bearerToken))
+            .ReturnsAsync(safBaseResponse);
 
         // Act
         var result = await _safApiService.GetMemberEncryptedPublicKey(bearerToken, keyId);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(keyId, result.KeyId);
-        Assert.Equal("encrypted-public-key-content", result.encryptedContent);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(keyId, result.Data.KeyId);
+        Assert.Equal("enc", result.Data.encryptedContent);
     }
 
     [Fact]
-    public async Task GetMemberEncryptedPublicKey_ShouldThrowException_WhenRequestFails()
+    public async Task GetMemberEncryptedPublicKey_ShouldReturnError_WhenBearerTokenIsNull()
     {
         // Arrange
-        var bearerToken = "test-bearer-token";
-        var keyId = "key-id-123";
+        var keyId = "kid";
 
-        _httpRequestGatewayMock
-            .Setup(x => x.GetAsync<SafMemberGetEncryptedKeyResponse>(
-                It.Is<string>(url => url.Contains(keyId)),
-                null,
-                bearerToken))
-            .ThrowsAsync(new Exception("Request failed"));
-
-        // Act & Assert
-        await Assert.ThrowsAsync<Exception>(() => _safApiService.GetMemberEncryptedPublicKey(bearerToken, keyId));
-    }
-
-    [Fact]
-    public async Task VerifyMemberDecryptedPublicKey_ShouldReturnSuccess_WhenRequestIsSuccessful()
-    {
-        // Arrange  
-        var request = new SafMemberVerifyDecryptedKeyRequest
-        {
-            BearerToken = "test-bearer-token",
-            KeyId = "key-id-123",
-            Payload = new SafMemberVerifyDecryptedKeyRequestPayload() { DecryptedContent = "test-decripted_content" }
-        };
-
-        _httpRequestGatewayMock
-            .Setup(x => x.PostAsync<SafMemberVerifyDecryptedKeyRequest, SafMemberVerifyDecryptedKeyResponse>(
-                It.Is<string>(url => url.Contains(request.KeyId)),
-                request,
-                null,
-                request.BearerToken,
-                "application/json"))
-            .ReturnsAsync(new SafMemberVerifyDecryptedKeyResponse
-            {
-                VerificationStatus = VerificationStatus.Success
-            });
-
-        // Act  
-        var result = await _safApiService.VerifyMemberDecryptedPublicKey(request);
-
-        // Assert  
-        Assert.NotNull(result);
-        Assert.Equal(VerificationStatus.Success, result.VerificationStatus);
-    }
-
-    [Fact]
-    public async Task VerifyMemberDecryptedPublicKey_ShouldReturnFail_WhenRequestThrowsException()
-    {
-        // Arrange  
-        var request = new SafMemberVerifyDecryptedKeyRequest
-        {
-            BearerToken = "test-bearer-token",
-            KeyId = "key-id-123",
-            Payload = new SafMemberVerifyDecryptedKeyRequestPayload() { DecryptedContent = "test-decripted_content" }
-        };
-        
-
-        _httpRequestGatewayMock
-            .Setup(x => x.PostAsync<SafMemberVerifyDecryptedKeyRequest, SafMemberVerifyDecryptedKeyResponse>(
-                It.Is<string>(url => url.Contains(request.KeyId)),
-                request,
-                null,
-                request.BearerToken,
-                "application/json"))
-            .ThrowsAsync(new Exception("Request failed"));
-
-        // Act  
-        var result = await _safApiService.VerifyMemberDecryptedPublicKey(request);
-
-        // Assert  
-        Assert.NotNull(result);
-        Assert.Equal(VerificationStatus.Fail, result.VerificationStatus);
-    }
-
-    [Fact]
-    public async Task VerifyMemberDecryptedPublicKey_ShouldThrowArgumentException_WhenBearerTokenIsNull()
-    {
-        // Arrange
-        var request = new SafMemberVerifyDecryptedKeyRequest
-        {
-            BearerToken = null,
-            KeyId = "key-id-123",
-            Payload = new SafMemberVerifyDecryptedKeyRequestPayload()
-        };
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<ValidationException>(() => _safApiService.VerifyMemberDecryptedPublicKey(request));
-        Assert.Equal("Invalid person request: BearerToken is required", exception.Message);
-    }
-
-    [Fact]
-    public async Task VerifyMemberDecryptedPublicKey_ShouldThrowArgumentException_WhenKeyIdIsNull()
-    {
-        // Arrange
-        var request = new SafMemberVerifyDecryptedKeyRequest
-        {
-            BearerToken = "test-bearer-token",
-            KeyId = null,
-            Payload = new SafMemberVerifyDecryptedKeyRequestPayload() { DecryptedContent = "test-decripted_content" }
-        };
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<ValidationException>(() => _safApiService.VerifyMemberDecryptedPublicKey(request));
-        Assert.Equal("Invalid person request: KeyId is required", exception.Message);
-    }
-
-    [Fact]
-    public async Task ActivateMemberPublicKey_ShouldReturnTrue_WhenRequestIsSuccessful()
-    {
-        // Arrange
-        var bearerToken = "test-bearer-token";
-        var keyId = "key-id-123";
-
-        _httpRequestGatewayMock
-            .Setup(x => x.PostAsync<object, object>(
-                It.Is<string>(url => url.Contains(keyId)),
-                null,
-                null,
-                bearerToken,  
-                "application/json"))
-            .ReturnsAsync(new object());
-
-        var result = await _safApiService.ActivateMemberPublicKey(bearerToken, keyId);
+        // Act
+        var result = await _safApiService.GetMemberEncryptedPublicKey(null, keyId);
 
         // Assert
-        Assert.True(result);
+        Assert.False(result.IsSuccess);
+        Assert.Equal("ValidationError", result.Error.ErrorCode);
     }
-    
+
     [Fact]
-    public async Task ActivateMemberPublicKey_ShouldReturnFalse_WhenRequestThrowsException()
+    public async Task VerifyMemberDecryptedPublicKey_ShouldReturnSuccess_WhenRequestIsValid()
     {
         // Arrange
-        var bearerToken = "test-bearer-token";
-        var keyId = "key-id-123";
+        var request = new SafMemberVerifyDecryptedKeyRequest
+        {
+            BearerToken = "token",
+            KeyId = "kid",
+            Payload = new SafMemberVerifyDecryptedKeyRequestPayload { DecryptedContent = "dec" }
+        };
+        var safBaseResponse = new SafBaseResponse<SafMemberVerifyDecryptedKey>
+        {
+            IsSuccess = true,
+            Data = new SafMemberVerifyDecryptedKey { VerificationStatus = VerificationStatus.Success }
+        };
 
         _httpRequestGatewayMock
-           .Setup(x => x.PostAsync<object, object>(
-               It.Is<string>(url => url.Contains(keyId)),
-               null,
-               null,
-               bearerToken,
-               "application/json")) 
-           .ThrowsAsync(new Exception("Request failed"));
+            .Setup(x => x.PostAsync<SafMemberVerifyDecryptedKeyRequest, SafMemberVerifyDecryptedKey>(
+                It.IsAny<string>(),
+                It.IsAny<SafMemberVerifyDecryptedKeyRequest>(),
+                It.IsAny<Dictionary<string, string>>(),
+                It.IsAny<string>(),
+                It.IsAny<string>()))
+            .ReturnsAsync(safBaseResponse);
+
+        // Act
+        var result = await _safApiService.VerifyMemberDecryptedPublicKey(request);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal(VerificationStatus.Success, result.Data.VerificationStatus);
+    }
+
+    [Fact]
+    public async Task VerifyMemberDecryptedPublicKey_ShouldReturnError_WhenValidationFails()
+    {
+        // Arrange
+        var request = new SafMemberVerifyDecryptedKeyRequest(); // Missing required fields
+
+        // Act
+        var result = await _safApiService.VerifyMemberDecryptedPublicKey(request);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal("ValidationError", result.Error.ErrorCode);
+    }
+
+    [Fact]
+    public async Task VerifyMemberDecryptedPublicKey_ShouldReturnError_WhenGatewayThrows()
+    {
+        // Arrange
+        var request = new SafMemberVerifyDecryptedKeyRequest
+        {
+            BearerToken = "token",
+            KeyId = "kid",
+            Payload = new SafMemberVerifyDecryptedKeyRequestPayload { DecryptedContent = "dec" }
+        };
+
+        _httpRequestGatewayMock
+            .Setup(x => x.PostAsync<SafMemberVerifyDecryptedKeyRequest, SafMemberVerifyDecryptedKey>(
+                It.IsAny<string>(), request, null, request.BearerToken, null))
+            .ThrowsAsync(new Exception("Request failed"));
+
+        // Act
+        var result = await _safApiService.VerifyMemberDecryptedPublicKey(request);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.NotNull(result.Error);
+        Assert.Equal("Failed", result.Error.ErrorCode);
+    }
+
+    [Fact]
+    public async Task ActivateMemberPublicKey_ShouldReturnSuccess_WhenRequestIsValid()
+    {
+        // Arrange
+        var bearerToken = "token";
+        var keyId = "kid";
+        var safBaseResponse = new SafBaseResponse<dynamic>
+        {
+            IsSuccess = true,
+            Data = new { Status = "Success" }
+        };
+
+        _httpRequestGatewayMock
+            .Setup(x => x.PostAsync<object, dynamic>(
+                It.IsAny<string>(),
+                It.IsAny<object>(),
+                It.IsAny<Dictionary<string, string>>(),
+                It.IsAny<string>(),
+                It.IsAny<string>()))
+            .ReturnsAsync(safBaseResponse);
 
         // Act
         var result = await _safApiService.ActivateMemberPublicKey(bearerToken, keyId);
 
         // Assert
-        Assert.False(result);
-    }
-    [Fact]
-    public async Task ActivateMemberPublicKey_ShouldThrowArgumentException_WhenBearerTokenIsNull()
-    {
-        // Arrange
-        string bearerToken = null;
-        var keyId = "key-id-123";
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _safApiService.ActivateMemberPublicKey(bearerToken, keyId));
-        Assert.Equal("bearerToken cannot be null or empty. (Parameter 'bearerToken')", exception.Message);
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Data);
     }
 
     [Fact]
-    public async Task ActivateMemberPublicKey_ShouldThrowArgumentException_WhenKeyIdIsNull()
+    public async Task ActivateMemberPublicKey_ShouldReturnError_WhenBearerTokenIsNull()
     {
         // Arrange
-        var bearerToken = "test-bearer-token";
-        string keyId = null;
+        var keyId = "kid";
 
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<ArgumentException>(() => _safApiService.ActivateMemberPublicKey(bearerToken, keyId));
-        Assert.Equal("keyId cannot be null or empty. (Parameter 'keyId')", exception.Message);
+        // Act
+        var result = await _safApiService.ActivateMemberPublicKey(null, keyId);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal("ValidationError", result.Error.ErrorCode);
+    }
+
+    [Fact]
+    public async Task ActivateMemberPublicKey_ShouldReturnError_WhenGatewayThrows()
+    {
+        // Arrange
+        var bearerToken = "token";
+        var keyId = "kid";
+
+        _httpRequestGatewayMock
+            .Setup(x => x.PostAsync<object, dynamic>(
+                It.IsAny<string>(), null, null, bearerToken, null))
+            .ThrowsAsync(new Exception("Request failed"));
+
+        // Act
+        var result = await _safApiService.ActivateMemberPublicKey(bearerToken, keyId);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.NotNull(result.Error);
+        Assert.Equal("Failed", result.Error.ErrorCode);
     }
 }

@@ -2,7 +2,7 @@ using System;
 
 namespace SeliseBlocks.Ecohub.Saf;
 
-internal static class SafOfferNlpiEventMapper
+public static class SafOfferNlpiEventMapper
 {
     public static SafOfferNlpiEncryptedEvent MapToSafOfferNlpiEncryptedEvent(this SafOfferNlpiEvent eventPayload)
     {
@@ -30,6 +30,43 @@ internal static class SafOfferNlpiEventMapper
         };
     }
 
+    public static SafOfferNlpiEncryptedKafkaEvent MapToSafKafkaOfferNlpiEncryptedEvent(this SafOfferNlpiEvent eventPayload)
+    {
+        if (eventPayload == null) throw new ArgumentNullException(nameof(eventPayload));
+
+        return new SafOfferNlpiEncryptedKafkaEvent
+        {
+            id = eventPayload.Id,
+            source = eventPayload.Source,
+            specversion = eventPayload.Specversion,
+            type = eventPayload.Type,
+            datacontenttype = eventPayload.DataContentType,
+            dataschema = eventPayload.DataSchema,
+            subject = eventPayload.Subject,
+            time = eventPayload.Time,
+            licenceKey = eventPayload.LicenceKey,
+            userAgent = new SafUserKafkaAgent
+            {
+                name = eventPayload.UserAgent.Name,
+                version = eventPayload.UserAgent.Version
+            },
+            eventReceiver = new SafEventKafkaReceiver
+            {
+                category = eventPayload.EventReceiver.Category,
+                id = eventPayload.EventReceiver.Id
+            },
+            eventSender = new SafEventKafkaSender
+            {
+                category = eventPayload.EventSender.Category,
+                id = eventPayload.EventSender.Id
+            },
+            processId = eventPayload.ProcessId,
+            processStatus = eventPayload.ProcessStatus,
+            subProcessName = eventPayload.SubProcessName,
+            processName = eventPayload.ProcessName,
+            subProcessStatus = eventPayload.SubProcessStatus
+        };
+    }
     public static SafOfferNlpiEvent MapToSafOfferNlpiEvent(this SafOfferNlpiEncryptedEvent eventPayload)
     {
         if (eventPayload == null) throw new ArgumentNullException(nameof(eventPayload));
