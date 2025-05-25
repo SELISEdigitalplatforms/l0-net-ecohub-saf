@@ -32,7 +32,7 @@ public class SafKafkaEventHandlerTests
             KafkaServer = null, // This will cause an exception
             KafkaProducerTopic = "test-topic",
             TechUserCertificate = "invalid-base64", // Invalid certificate
-            TechUserPassword = "password",
+            TechUserPassword = "8gu765ggfd!34",
             SchemaRegistryUrl = "http://localhost:8081",
             SchemaRegistryAuth = "user:pass",
             EventPayload = new SafOfferNlpiEvent { Data = new SafData() }
@@ -57,7 +57,7 @@ public class SafKafkaEventHandlerTests
         {
             KafkaServer = null, // This will cause an exception
             TechUserCertificate = "invalid-base64",
-            TechUserPassword = "password",
+            TechUserPassword = "8gu765ggfd!34",
             GroupId = "group1",
             EcohubId = "ecohub1"
         };
@@ -72,4 +72,5 @@ public class SafKafkaEventHandlerTests
         Assert.Equal("Exception", result.Error.ErrorCode);
         Assert.Contains("The input is not a valid Base-64 string", result.Error.ErrorMessage);
     }
+
 }
