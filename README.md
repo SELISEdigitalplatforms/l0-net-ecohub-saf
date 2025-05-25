@@ -18,9 +18,10 @@
    - [Authentication (ISafAuthService)](#1-authentication-isafauthservice)
    - [SAF API Interactions (ISafApiService)](#2-saf-api-interactions-isafapiservice)
    - [SAF Event Handling (ISafRestProxyEventHandler, ISafKafkaEventHandler)](#3-saf-event-handling)
-4. [Response Structure](#response-structure)
-5. [Error Handling](#error-handling)
-6. [Dependencies](#dependencies)
+4. [Generate Public and Private Key](#generate-public-and-private-key)
+5. [Response Structure](#response-structure)
+6. [Error Handling](#error-handling)
+7. [Dependencies](#dependencies)
 
 ---
 
@@ -165,6 +166,8 @@ Task<SafMemberPublicKeyResponse> GetMemberPublicKey(string bearerToken, string i
 
 #### Upload Member Public Key
 
+To generate public or private key you can use the method [GenerateRsaKey](#generate-public-and-private-key) of KmsHelper class
+
 ```csharp
 Task<SafMemberPublicKeyResponse> UploadMemberPublicKey(SafMemberPublicKeyUploadRequest request);
 ```
@@ -264,6 +267,35 @@ All event handler responses have the following structure:
     - `IsSuccess`
     - `Data` (`SafOfferNlpiEvent`)
     - `Error` (`SafError`)
+
+---
+
+## Generate Public and Private Key
+
+Generates an RSA key in PEM format for the specified key type and size.
+
+```csharp
+Dictionary<RsaKeyType, string> GenerateRsaKey(RsaKeyType keyType, int keySize = 2048)
+```
+
+- **Parameters:**
+  - `keyType`: The type of RSA key to generate. Use `RsaKeyType.Public` for a public key, `RsaKeyType.Private` for a private key, or `RsaKeyType.Both` to generate both.
+  - `keySize`: The size of the RSA key in bits. Default is 2048.
+
+- **Returns:**  
+  A dictionary containing the generated key(s) as PEM-formatted strings, keyed by `RsaKeyType`.  
+  For example, the dictionary will contain entries for `RsaKeyType.Public` and/or `RsaKeyType.Private`.
+
+- **Remarks:**  
+  The returned PEM strings can be used for cryptographic operations such as encryption, decryption, signing, and verification.
+
+**Example:**
+
+```csharp
+var keys = KmsHelper.GenerateRsaKey(RsaKeyType.Both);
+string publicKeyPem = keys[RsaKeyType.Public];
+string privateKeyPem = keys[RsaKeyType.Private];
+```
 
 ---
 
