@@ -11,5 +11,7 @@ public class SafData
     public string PublicKey { get; set; }
     public List<SafLinks> Links { get; set; }
     public string PublicKeyVersion { get; set; }
+    public string PayloadSignature { get; set; }
+    public string SignatureKeyVersion { get; set; }
     public string Message { get; set; }
 }

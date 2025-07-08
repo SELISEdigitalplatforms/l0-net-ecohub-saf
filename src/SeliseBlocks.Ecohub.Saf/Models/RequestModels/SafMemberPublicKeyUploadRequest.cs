@@ -8,7 +8,7 @@ public class SafMemberPublicKeyUploadRequest
     [Required(ErrorMessage = "BearerToken is required")]
     public string BearerToken { get; set; } = string.Empty;
 
-    public SafMemberPublicKeyUploadRequestPayload Payload { get; set; } = new SafMemberPublicKeyUploadRequestPayload();
+    public IEnumerable<SafMemberPublicKeyUploadRequestPayload> Payload { get; set; } = [];
 }
 
 public class SafMemberPublicKeyUploadRequestPayload
@@ -20,6 +20,10 @@ public class SafMemberPublicKeyUploadRequestPayload
     [Required(ErrorMessage = "Key is required")]
     [JsonPropertyName("key")]
     public string Key { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "keyType is required")]
+    [JsonPropertyName("keyType")]
+    public string KeyType { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "ExpireInDays is required")]
     [JsonPropertyName("expireInDays")]

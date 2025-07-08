@@ -25,6 +25,11 @@ public class SafEncryptedData
     [JsonProperty("publicKeyVersion", NullValueHandling = NullValueHandling.Ignore)]
     public string PublicKeyVersion { get; set; }
 
+    [JsonProperty("payloadSignature", NullValueHandling = NullValueHandling.Ignore)]
+    public string PayloadSignature { get; set; }
+    [JsonProperty("publicKeyVersion", NullValueHandling = NullValueHandling.Ignore)]
+    public string SignatureKeyVersion { get; set; }
+
     [JsonProperty("message", NullValueHandling = NullValueHandling.Ignore)]
     public string Message { get; set; }
 
