@@ -26,6 +26,7 @@ public static class SafDriverServiceExtension
         // Registers scoped services for SAF authentication, API, and event handling.
         services.AddScoped<ISafAuthService, SafAuthService>();
         services.AddScoped<ISafApiService, SafApiService>();
+        services.AddScoped<ISafPkiApiService, SafPkiApiService>();
         services.AddScoped<ISafRestProxyEventHandler, SafRestProxyEventHandler>();
         services.AddScoped<ISafKafkaEventHandler, SafKafkaEventHandler>();
     }

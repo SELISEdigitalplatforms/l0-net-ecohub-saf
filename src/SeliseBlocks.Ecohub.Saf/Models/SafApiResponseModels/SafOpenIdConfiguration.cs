@@ -9,7 +9,7 @@ public class SafOpenIdConfiguration
     [JsonPropertyName("token_endpoint_auth_methods_supported")]
     public string[] TokenEndpointAuthMethodsSupported { get; set; }
     [JsonPropertyName("jwks_uri")]
-    public string[] JwksUri { get; set; }
+    public string JwksUri { get; set; }
     [JsonPropertyName("response_modes_supported")]
     public string[] ResponseModesSupported { get; set; }
     [JsonPropertyName("subject_types_supported")]

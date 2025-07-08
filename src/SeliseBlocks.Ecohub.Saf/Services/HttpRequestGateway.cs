@@ -171,7 +171,7 @@ public class HttpRequestGateway : IHttpRequestGateway
                     ?? throw new ArgumentException("Body must be Dictionary<string, string> for form-urlencoded"));
                 request.Content.Headers.ContentType = new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded");
             }
-            else
+            else if (body is not null && contentType == "application/json")
             {
                 request.Content = new StringContent(
                     JsonSerializer.Serialize(body),

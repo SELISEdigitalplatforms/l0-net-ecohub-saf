@@ -63,7 +63,7 @@ public interface ISafPkiApiService
     /// <returns>
     /// A <see cref="SafMemberPublicKeyResponse"/> containing the member's public key details
     /// </returns>
-    Task<SafMemberPublicKeyResponse> GetMemberPublicKey(string bearerToken, string idpNumber);
+    Task<SafMemberPublicKeysResponse> GetMemberPublicKey(string bearerToken, string idpNumber);
 
     /// <summary>
     /// Retrieves a member's encrypted public key.
@@ -76,6 +76,6 @@ public interface ISafPkiApiService
     Task<SafMemberGetEncryptedKeyResponse> GetMemberEncryptedPublicKey(string bearerToken, string keyId);
 
     Task<SafMemberPublicKeysResponse> GetAllKeys(string bearerToken);
-    Task<SafMemberPublicKeyResponse> GetKeyDetails(string bearerToken, string key);
+    Task<SafMemberPublicKeyResponse> GetKeyDetails(string bearerToken, string keyId);
     Task<SafMemberPublicKeysResponse> GetKeysByKeyType(string bearerToken, string idpNumber, string keyType);
 }

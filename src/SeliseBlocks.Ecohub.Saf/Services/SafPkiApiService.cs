@@ -202,9 +202,9 @@ public class SafPkiApiService : ISafPkiApiService
         }
     }
 
-    public async Task<SafMemberPublicKeyResponse> GetMemberPublicKey(string bearerToken, string idpNumber)
+    public async Task<SafMemberPublicKeysResponse> GetMemberPublicKey(string bearerToken, string idpNumber)
     {
-        var response = new SafMemberPublicKeyResponse();
+        var response = new SafMemberPublicKeysResponse();
 
         if (string.IsNullOrEmpty(bearerToken))
         {
@@ -226,12 +226,12 @@ public class SafPkiApiService : ISafPkiApiService
         }
 
         var endpoint = SafDriverConstant.GetMemberPublicKeyEndpoint.Replace("{idpNumber}", idpNumber);
-        var safResponse = await _httpRequestGateway.GetAsync<SafMemberPublicKey>(
+        var safResponse = await _httpRequestGateway.GetAsync<IEnumerable<SafMemberPublicKey>>(
             endpoint: endpoint,
             headers: null,
             bearerToken: bearerToken);
 
-        response = safResponse.MapToDerivedResponse<SafMemberPublicKey, SafMemberPublicKeyResponse>();
+        response = safResponse.MapToDerivedResponse<SafMemberPublicKey, SafMemberPublicKeysResponse>();
 
         return response;
     }
@@ -310,7 +310,7 @@ public class SafPkiApiService : ISafPkiApiService
             return response;
         }
 
-        var endpoint = SafDriverConstant.GetEncryptedPublicKeyEndpoint.Replace("{idpNumber}", idpNumber);
+        var endpoint = SafDriverConstant.GetPublicKeyByKeyTypeEndpoint.Replace("{idpNumber}", idpNumber);
         endpoint = endpoint.Replace("{keyType}", keyType);
         var safResponse = await _httpRequestGateway.GetAsync<IEnumerable<SafMemberPublicKey>>(
             endpoint: endpoint,
