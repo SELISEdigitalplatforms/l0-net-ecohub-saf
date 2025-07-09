@@ -244,31 +244,20 @@ public class KmsHelper
         return keys;
     }
 
-    public static string GetSignatureOfVerificationContent(string verificationContent, string base64PrivateKey)
+    public static string SignContentWithEcPrivateKey(byte[] contentBytes, string pemPrivateKey)
     {
-        if (string.IsNullOrEmpty(verificationContent))
-            throw new ArgumentNullException(nameof(verificationContent), "Verification content cannot be null or empty.");
+        if (string.IsNullOrEmpty(pemPrivateKey))
+            throw new ArgumentNullException(nameof(pemPrivateKey), "Private key cannot be null or empty.");
 
-        if (string.IsNullOrEmpty(base64PrivateKey))
-            throw new ArgumentNullException(nameof(base64PrivateKey), "Private key cannot be null or empty.");
-
-
-        //string base64PrivateKey = "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg9PfSPzYfM1r6X..."; // example
-        byte[] contentBytes = System.Text.Encoding.UTF8.GetBytes(verificationContent);
-
-        // Step 1: Import EC private key (Base64 PKCS#8 DER format)
-        byte[] privateKeyBytes = Convert.FromBase64String(base64PrivateKey);
         using var ecdsa = ECDsa.Create();
-        ecdsa.ImportPkcs8PrivateKey(privateKeyBytes, out _);
+        ImportECPrivateKeyFromPem(ecdsa, pemPrivateKey);
 
-        // Step 2: Sign content with SHA384
         byte[] signature = ecdsa.SignData(contentBytes, HashAlgorithmName.SHA384);
 
-        // Step 3: Convert signature to Base64
         return Convert.ToBase64String(signature);
 
     }
-    public static string GetDecryptedContent(string content, string pemPrivateKey)
+    public static string DecryptContentWithRsaPrivateKey(string content, string pemPrivateKey)
     {
         if (string.IsNullOrEmpty(content))
             throw new ArgumentNullException(nameof(content), "Content cannot be null or empty.");
@@ -285,6 +274,27 @@ public class KmsHelper
 
 
     }
+
+    static void ImportECPrivateKeyFromPem(ECDsa ecdsa, string pem)
+    {
+        if (pem.Contains("-----BEGIN PRIVATE KEY-----"))
+        {
+            var base64 = ExtractPemContent(pem, "PRIVATE KEY");
+            byte[] keyBytes = Convert.FromBase64String(base64);
+            ecdsa.ImportPkcs8PrivateKey(keyBytes, out _);
+        }
+        else if (pem.Contains("-----BEGIN EC PRIVATE KEY-----"))
+        {
+            var base64 = ExtractPemContent(pem, "EC PRIVATE KEY");
+            byte[] keyBytes = Convert.FromBase64String(base64);
+            ecdsa.ImportECPrivateKey(keyBytes, out _);
+        }
+        else
+        {
+            throw new Exception("Unsupported EC key format.");
+        }
+    }
+
 
     public static void ImportPrivateKeyFromPem(RSA rsa, string pem)
     {
@@ -313,8 +323,6 @@ public class KmsHelper
         string base64 = pem[start..end].Replace("\r", "").Replace("\n", "").Trim();
         return base64;
     }
-
-
 
 }
 
