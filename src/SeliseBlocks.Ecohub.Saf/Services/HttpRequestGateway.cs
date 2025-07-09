@@ -184,13 +184,15 @@ public class HttpRequestGateway : IHttpRequestGateway
             if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK
             || httpResponse.StatusCode == System.Net.HttpStatusCode.BadRequest
             || httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound
-            || httpResponse.StatusCode == System.Net.HttpStatusCode.InternalServerError)
+            || httpResponse.StatusCode == System.Net.HttpStatusCode.InternalServerError
+            || httpResponse.StatusCode == System.Net.HttpStatusCode.Conflict)
             {
                 var responseContent = await httpResponse.Content.ReadAsStringAsync();
                 if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     response.IsSuccess = true;
-                    response.Data = await httpResponse.Content.ReadFromJsonAsync<TResponse>();
+                    response.Data = string.IsNullOrWhiteSpace(responseContent)
+                    ? null : await httpResponse.Content.ReadFromJsonAsync<TResponse>();
                 }
                 else
                 {

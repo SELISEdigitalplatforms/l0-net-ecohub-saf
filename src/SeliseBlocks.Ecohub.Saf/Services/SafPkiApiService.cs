@@ -12,21 +12,21 @@ public class SafPkiApiService : ISafPkiApiService
         _httpRequestGateway = httpRequestGateway;
     }
 
-    public async Task<SafMemberPublicKeyResponse> UploadMemberPublicKey(SafMemberPublicKeyUploadRequest request)
+    public async Task<SafMemberPublicKeysResponse> UploadMemberPublicKey(SafMemberPublicKeyUploadRequest request)
     {
         var validation = request.Validate();
         if (!validation.IsSuccess)
         {
-            return validation.MapToResponse<SafMemberPublicKey, SafMemberPublicKeyResponse>();
+            return validation.MapToResponse<IEnumerable<SafMemberPublicKey>, SafMemberPublicKeysResponse>();
         }
 
-        var response = await _httpRequestGateway.PostAsync<IEnumerable<SafMemberPublicKeyUploadRequestPayload>, SafMemberPublicKey>(
+        var response = await _httpRequestGateway.PostAsync<IEnumerable<SafMemberPublicKeyUploadRequestPayload>, IEnumerable<SafMemberPublicKey>>(
             endpoint: SafDriverConstant.UploadMemberPublicKeyEndpoint,
             requestBody: request.Payload,
             headers: null,
             bearerToken: request.BearerToken);
 
-        return response.MapToDerivedResponse<SafMemberPublicKey, SafMemberPublicKeyResponse>();
+        return response.MapToDerivedResponse<SafMemberPublicKey, SafMemberPublicKeysResponse>();
     }
 
     public async Task<SafMemberVerifyDecryptedKeyResponse> VerifyMemberDecryptedPublicKey(SafMemberVerifyDecryptedKeyRequest request)
@@ -40,9 +40,9 @@ public class SafPkiApiService : ISafPkiApiService
         try
         {
             var endpoint = SafDriverConstant.VerifyDecryptedPublicKeyEndpoint.Replace("{keyId}", request.KeyId);
-            var response = await _httpRequestGateway.PostAsync<SafMemberVerifyDecryptedKeyRequest, SafMemberVerifyDecryptedKey>(
+            var response = await _httpRequestGateway.PostAsync<SafMemberVerifyDecryptedKeyRequestPayload, SafMemberVerifyDecryptedKey>(
                 endpoint: endpoint,
-                requestBody: request,
+                requestBody: request.Payload,
                 headers: null,
                 bearerToken: request.BearerToken);
 
@@ -336,7 +336,7 @@ public class SafPkiApiService : ISafPkiApiService
             return response;
         }
 
-        var endpoint = SafDriverConstant.GetEncryptedPublicKeyEndpoint.Replace("{keyId}", keyId);
+        var endpoint = SafDriverConstant.GetPublicKeyDetailsEndpoint.Replace("{keyId}", keyId);
         var safResponse = await _httpRequestGateway.GetAsync<SafMemberPublicKey>(
             endpoint: endpoint,
             headers: null,

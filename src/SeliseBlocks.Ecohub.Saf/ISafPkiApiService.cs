@@ -24,7 +24,7 @@ public interface ISafPkiApiService
     /// <returns>
     /// A <see cref="SafMemberPublicKeyResponse"/> with the uploaded key details
     /// </returns>
-    Task<SafMemberPublicKeyResponse> UploadMemberPublicKey(SafMemberPublicKeyUploadRequest request);
+    Task<SafMemberPublicKeysResponse> UploadMemberPublicKey(SafMemberPublicKeyUploadRequest request);
 
     /// <summary>
     /// Verifies a member's decrypted public key.
