@@ -7,10 +7,19 @@ namespace SeliseBlocks.Ecohub.Saf.Helpers;
 public static class RsaKeyHelper
 {
     /// <summary>
-    /// Generates a key pair (public/private) for RSA in PEM format.
+    /// Generates an RSA key pair (public and private keys) in PEM format.
     /// </summary>
-    /// <param name="keySize">Key size for RSA (default 2048)</param>
-    /// <returns>A tuple (publicKeyPem, privateKeyPem) as PEM-formatted strings.</returns>
+    /// <param name="keySize">The size of the RSA key in bits. Default is 2048.</param>
+    /// <returns>
+    /// A tuple containing the public key PEM and private key PEM as strings.
+    /// <list type="bullet">
+    ///   <item><description><c>publicKeyPem</c>: The RSA public key in PEM format.</description></item>
+    ///   <item><description><c>privateKeyPem</c>: The RSA private key in PEM format.</description></item>
+    /// </list>
+    /// </returns>
+    /// <remarks>
+    /// The returned PEM strings can be used for RSA encryption, decryption, signing, and verification operations.
+    /// </remarks>
     public static (string publicKeyPem, string privateKeyPem) GenerateKeyPair(int keySize = 2048)
     {
         using var rsa = RSA.Create(keySize);
@@ -26,12 +35,12 @@ public static class RsaKeyHelper
     }
 
     /// <summary>
-    /// Encrypts an AES key using RSA public key encryption.
+    /// Encrypts an AES key using the provided RSA public key in PEM format.
     /// </summary>
-    /// <param name="aesKey">The AES key to encrypt.</param>
+    /// <param name="aesKey">The AES key to encrypt as a byte array.</param>
     /// <param name="publicKey">The PEM-formatted RSA public key used for encryption.</param>
-    /// <returns>Base64-encoded string of the encrypted AES key.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when aesKey or publicKey is null.</exception>
+    /// <returns>A base64-encoded string of the encrypted AES key.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="aesKey"/> or <paramref name="publicKey"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown when the public key format is invalid.</exception>
     /// <exception cref="CryptographicException">Thrown when encryption fails.</exception>
     public static string EncryptAesKeyWithPublicKey(byte[] aesKey, string publicKey)
@@ -47,12 +56,12 @@ public static class RsaKeyHelper
     }
 
     /// <summary>
-    /// Decrypts an encrypted AES key using RSA private key decryption.
+    /// Decrypts an AES key that was encrypted with an RSA public key, using the provided RSA private key in PEM format.
     /// </summary>
-    /// <param name="encryptedAesKeyBase64">Base64-encoded encrypted AES key.</param>
+    /// <param name="encryptedAesKeyBase64">The base64-encoded encrypted AES key.</param>
     /// <param name="privateKey">The PEM-formatted RSA private key used for decryption.</param>
     /// <returns>The decrypted AES key as a byte array.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when encryptedAesKeyBase64 or privateKey is null.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="encryptedAesKeyBase64"/> or <paramref name="privateKey"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown when the private key format is invalid.</exception>
     /// <exception cref="FormatException">Thrown when the base64 string is invalid.</exception>
     /// <exception cref="CryptographicException">Thrown when decryption fails.</exception>
@@ -71,6 +80,15 @@ public static class RsaKeyHelper
         return decryptedAesKey;
     }
 
+    /// <summary>
+    /// Decrypts a base64-encoded string using the provided RSA private key in PEM format.
+    /// </summary>
+    /// <param name="content">The base64-encoded string to decrypt.</param>
+    /// <param name="pemPrivateKey">The PEM-formatted RSA private key used for decryption.</param>
+    /// <returns>The decrypted content as a UTF-8 string.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when <paramref name="content"/> or <paramref name="pemPrivateKey"/> is null or empty.</exception>
+    /// <exception cref="FormatException">Thrown when the base64 string is invalid.</exception>
+    /// <exception cref="CryptographicException">Thrown when decryption fails.</exception>
     public static string DecryptContentWithPrivateKey(string content, string pemPrivateKey)
     {
         if (string.IsNullOrEmpty(content))
@@ -87,6 +105,12 @@ public static class RsaKeyHelper
         return Encoding.UTF8.GetString(decrypted);
     }
 
+    /// <summary>
+    /// Imports an RSA private key from a PEM-formatted string into the provided <see cref="RSA"/> instance.
+    /// </summary>
+    /// <param name="rsa">The <see cref="RSA"/> instance to import the key into.</param>
+    /// <param name="pem">The PEM-formatted private key string.</param>
+    /// <exception cref="InvalidOperationException">Thrown when the PEM format is not supported.</exception>
     public static void ImportPrivateKeyFromPem(RSA rsa, string pem)
     {
         byte[] keyBytes;
