@@ -232,7 +232,7 @@ BXEJV0nDz043plwyNj6Y+5zvIbfyXnb3orKNoZ9ft9V5vrkj0bWphCaUVQkkov6s
         var compressedPayload = GzipCompressor.CompressBytes(originalPayload);
         var encryptedPayloadBase64 = AesKeyHelper.Encrypt(compressedPayload, aesKey);
 
-        var encryptedAesKeyBase64 = AesKeyHelper.EncryptAesKeyWithPublicKey(aesKey, _testPublicKey);
+        var encryptedAesKeyBase64 = RsaKeyHelper.EncryptAesKeyWithPublicKey(aesKey, _testPublicKey);
 
         var request = new SafReceiveOfferNlpiEventRequest
         {
@@ -259,7 +259,6 @@ BXEJV0nDz043plwyNj6Y+5zvIbfyXnb3orKNoZ9ft9V5vrkj0bWphCaUVQkkov6s
                     Payload = encryptedPayloadBase64, // <-- Use AES-encrypted payload
                     EncryptionKey = encryptedAesKeyBase64, // <-- Use RSA-encrypted AES key
                     PublicKeyVersion = "1.0",
-                    Message = "msg",
                     Links = new List<SafLinks>()
                 }
             }
