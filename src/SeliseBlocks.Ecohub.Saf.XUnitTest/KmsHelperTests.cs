@@ -30,7 +30,7 @@ public class KmsHelperTests
     [Fact]
     public void GenerateAesKey_ShouldReturn32ByteKey()
     {
-        var key = KmsHelper.GenerateAesKey();
+        var key = AesKeyHelper.GenerateKey();
         Assert.NotNull(key);
         Assert.Equal(32, key.Length);
     }
@@ -38,8 +38,8 @@ public class KmsHelperTests
     [Fact]
     public void EncryptAesKeyWithPublicKey_ShouldEncryptKey()
     {
-        var aesKey = KmsHelper.GenerateAesKey();
-        var encryptedKey = KmsHelper.EncryptAesKeyWithPublicKey(aesKey, _testPublicKey);
+        var aesKey = AesKeyHelper.GenerateKey();
+        var encryptedKey = RsaKeyHelper.EncryptAesKeyWithPublicKey(aesKey, _testPublicKey);
         Assert.NotNull(encryptedKey);
         Assert.True(Convert.TryFromBase64String(encryptedKey, new byte[encryptedKey.Length], out _));
     }
@@ -50,23 +50,23 @@ public class KmsHelperTests
     [InlineData("invalid-pem")]
     public void EncryptAesKeyWithPublicKey_ShouldThrowException_WhenPublicKeyIsInvalid(string invalidKey)
     {
-        var aesKey = KmsHelper.GenerateAesKey();
-        Assert.ThrowsAny<Exception>(() => KmsHelper.EncryptAesKeyWithPublicKey(aesKey, invalidKey));
+        var aesKey = AesKeyHelper.GenerateKey();
+        Assert.ThrowsAny<Exception>(() => RsaKeyHelper.EncryptAesKeyWithPublicKey(aesKey, invalidKey));
     }
 
     [Fact]
     public void EncryptAesKeyWithPublicKey_ShouldThrowException_WhenAesKeyIsNull()
     {
         Assert.Throws<ArgumentNullException>(() =>
-            KmsHelper.EncryptAesKeyWithPublicKey(null, _testPublicKey));
+            RsaKeyHelper.EncryptAesKeyWithPublicKey(null, _testPublicKey));
     }
 
     [Fact]
     public void DecryptAesKeyWithPrivateKey_ShouldDecryptKey()
     {
-        var originalKey = KmsHelper.GenerateAesKey();
-        var encryptedKey = KmsHelper.EncryptAesKeyWithPublicKey(originalKey, _testPublicKey);
-        var decryptedKey = KmsHelper.DecryptAesKeyWithPrivateKey(encryptedKey, _testPrivateKey);
+        var originalKey = AesKeyHelper.GenerateKey();
+        var encryptedKey = RsaKeyHelper.EncryptAesKeyWithPublicKey(originalKey, _testPublicKey);
+        var decryptedKey = RsaKeyHelper.DecryptAesKeyWithPrivateKey(encryptedKey, _testPrivateKey);
         Assert.Equal(originalKey, decryptedKey);
     }
 
@@ -78,7 +78,7 @@ public class KmsHelperTests
     {
         var encryptedKey = Convert.ToBase64String(new byte[] { 1, 2, 3 });
         Assert.ThrowsAny<Exception>(() =>
-            KmsHelper.DecryptAesKeyWithPrivateKey(encryptedKey, invalidKey));
+            RsaKeyHelper.DecryptAesKeyWithPrivateKey(encryptedKey, invalidKey));
     }
 
     [Theory]
@@ -88,15 +88,15 @@ public class KmsHelperTests
     public void DecryptAesKeyWithPrivateKey_ShouldThrowException_WhenEncryptedKeyIsInvalid(string invalidKey)
     {
         Assert.ThrowsAny<Exception>(() =>
-            KmsHelper.DecryptAesKeyWithPrivateKey(invalidKey, _testPrivateKey));
+            RsaKeyHelper.DecryptAesKeyWithPrivateKey(invalidKey, _testPrivateKey));
     }
 
     [Fact]
     public void EncryptWithAesKey_ShouldEncryptData()
     {
-        var key = KmsHelper.GenerateAesKey();
+        var key = AesKeyHelper.GenerateKey();
         var data = Encoding.UTF8.GetBytes("Test data");
-        var encryptedData = KmsHelper.EncryptWithAesKey(data, key);
+        var encryptedData = AesKeyHelper.Encrypt(data, key);
         Assert.NotNull(encryptedData);
         Assert.True(Convert.TryFromBase64String(encryptedData, new byte[encryptedData.Length], out _));
     }
@@ -104,15 +104,15 @@ public class KmsHelperTests
     [Fact]
     public void EncryptWithAesKey_ShouldThrowException_WhenPayloadIsNull()
     {
-        var key = KmsHelper.GenerateAesKey();
-        Assert.Throws<Exception>(() => KmsHelper.EncryptWithAesKey(null, key));
+        var key = AesKeyHelper.GenerateKey();
+        Assert.Throws<Exception>(() => AesKeyHelper.Encrypt(null, key));
     }
 
     [Fact]
     public void EncryptWithAesKey_ShouldThrowException_WhenKeyIsNull()
     {
         var data = Encoding.UTF8.GetBytes("Test data");
-        Assert.Throws<Exception>(() => KmsHelper.EncryptWithAesKey(data, null));
+        Assert.Throws<Exception>(() => AesKeyHelper.Encrypt(data, null));
     }
 
     [Fact]
@@ -120,16 +120,16 @@ public class KmsHelperTests
     {
         var data = Encoding.UTF8.GetBytes("Test data");
         var invalidKey = new byte[16];
-        Assert.Throws<ArgumentException>(() => KmsHelper.EncryptWithAesKey(data, invalidKey));
+        Assert.Throws<ArgumentException>(() => AesKeyHelper.Encrypt(data, invalidKey));
     }
 
     [Fact]
     public void DecryptWithAesKey_ShouldDecryptData()
     {
-        var key = KmsHelper.GenerateAesKey();
+        var key = AesKeyHelper.GenerateKey();
         var originalData = Encoding.UTF8.GetBytes("Test data");
-        var encryptedData = KmsHelper.EncryptWithAesKey(originalData, key);
-        var decryptedData = KmsHelper.DecryptWithAesKey(encryptedData, key);
+        var encryptedData = AesKeyHelper.Encrypt(originalData, key);
+        var decryptedData = AesKeyHelper.Decrypt(encryptedData, key);
         Assert.Equal(originalData, decryptedData);
     }
 
@@ -139,15 +139,15 @@ public class KmsHelperTests
     [InlineData("invalid-base64")]
     public void DecryptWithAesKey_ShouldThrowException_WhenBase64DataIsInvalid(string invalidData)
     {
-        var key = KmsHelper.GenerateAesKey();
-        Assert.ThrowsAny<Exception>(() => KmsHelper.DecryptWithAesKey(invalidData, key));
+        var key = AesKeyHelper.GenerateKey();
+        Assert.ThrowsAny<Exception>(() => AesKeyHelper.Decrypt(invalidData, key));
     }
 
     [Fact]
     public void DecryptWithAesKey_ShouldThrowException_WhenKeyIsNull()
     {
         var encryptedData = Convert.ToBase64String(new byte[] { 1, 2, 3 });
-        Assert.Throws<ArgumentException>(() => KmsHelper.DecryptWithAesKey(encryptedData, null));
+        Assert.Throws<ArgumentException>(() => AesKeyHelper.Decrypt(encryptedData, null));
     }
 
     [Fact]
@@ -155,19 +155,19 @@ public class KmsHelperTests
     {
         var encryptedData = Convert.ToBase64String(new byte[] { 1, 2, 3 });
         var invalidKey = new byte[16];
-        Assert.Throws<ArgumentException>(() => KmsHelper.DecryptWithAesKey(encryptedData, invalidKey));
+        Assert.Throws<ArgumentException>(() => AesKeyHelper.Decrypt(encryptedData, invalidKey));
     }
 
     [Fact]
     public void DecryptWithAesKey_ShouldThrowException_WhenAuthenticationFails()
     {
-        var key = KmsHelper.GenerateAesKey();
+        var key = AesKeyHelper.GenerateKey();
         var data = Encoding.UTF8.GetBytes("Test data");
-        var encryptedData = KmsHelper.EncryptWithAesKey(data, key);
+        var encryptedData = AesKeyHelper.Encrypt(data, key);
         var tamperedData = string.Concat(encryptedData.AsSpan(0, encryptedData.Length - 4), "AAAA");
 
         Assert.Throws<CryptographicException>(() =>
-            KmsHelper.DecryptWithAesKey(tamperedData, key));
+            AesKeyHelper.Decrypt(tamperedData, key));
     }
 
     [Fact]

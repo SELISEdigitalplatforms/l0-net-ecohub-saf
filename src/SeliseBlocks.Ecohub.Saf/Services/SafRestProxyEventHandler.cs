@@ -76,7 +76,7 @@ public class SafRestProxyEventHandler : ISafRestProxyEventHandler
     private SafOfferNlpiEncryptedEvent PrepareEventRequestPayload(SafOfferNlpiEvent eventPayload)
     {
         var payload = eventPayload.MapToSafOfferNlpiEncryptedEvent();
-        payload.Data = SafEventDataResolver.CompressAndEncrypt(eventPayload.Data);
+        payload.Data = SafEventDataResolver.CompressEncryptAndSignPayload(eventPayload.Data);
         return payload;
     }
     private SafOfferNlpiEvent PrepareEventResponsePayload(SafReceiveOfferNlpiEvent eventItem, string privateKey)

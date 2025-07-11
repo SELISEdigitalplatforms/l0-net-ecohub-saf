@@ -9,6 +9,7 @@ public class SafData
 {
     public byte[] Payload { get; set; }
     public string PublicKey { get; set; }
+    public string EcPrivateKey { get; set; }
     public List<SafLinks> Links { get; set; }
     public string PublicKeyVersion { get; set; }
     public string PayloadSignature { get; set; }

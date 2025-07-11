@@ -2,9 +2,8 @@ using System;
 
 namespace SeliseBlocks.Ecohub.Saf.Models;
 
-public enum RsaKeyType
+public enum AlgorithmType
 {
-    Public,
-    Private,
-    Both
+    RSA = 1,
+    ECDSA = 2
 }

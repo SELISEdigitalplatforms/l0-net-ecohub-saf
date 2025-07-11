@@ -227,12 +227,12 @@ BXEJV0nDz043plwyNj6Y+5zvIbfyXnb3orKNoZ9ft9V5vrkj0bWphCaUVQkkov6s
     public async Task ReceiveOfferNlpiEventAsync_ShouldReturnEvents_WhenRequestIsValid()
     {
         // Arrange
-        var aesKey = KmsHelper.GenerateAesKey();
+        var aesKey = AesKeyHelper.GenerateKey();
         var originalPayload = Encoding.UTF8.GetBytes("your test data");
         var compressedPayload = GzipCompressor.CompressBytes(originalPayload);
-        var encryptedPayloadBase64 = KmsHelper.EncryptWithAesKey(compressedPayload, aesKey);
+        var encryptedPayloadBase64 = AesKeyHelper.Encrypt(compressedPayload, aesKey);
 
-        var encryptedAesKeyBase64 = KmsHelper.EncryptAesKeyWithPublicKey(aesKey, _testPublicKey);
+        var encryptedAesKeyBase64 = AesKeyHelper.EncryptAesKeyWithPublicKey(aesKey, _testPublicKey);
 
         var request = new SafReceiveOfferNlpiEventRequest
         {
