@@ -4,7 +4,7 @@ namespace SeliseBlocks.Ecohub.Saf;
 /// Interface for interacting with the SAF API. 
 /// Provides methods to manage member public keys and retrieve receiver information.
 /// </summary>
-public interface ISafApiService
+public interface ISafGeneralApiService
 {
     /// <summary>
     /// Asynchronously retrieves receiver information from the SAF API.

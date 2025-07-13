@@ -9,12 +9,12 @@ namespace SeliseBlocks.Ecohub.Saf.XUnitTest;
 public class SafApiServiceTests
 {
     private readonly Mock<IHttpRequestGateway> _httpRequestGatewayMock;
-    private readonly SafApiService _safApiService;
+    private readonly SafGeneralApiService _safApiService;
 
     public SafApiServiceTests()
     {
         _httpRequestGatewayMock = new Mock<IHttpRequestGateway>();
-        _safApiService = new SafApiService(_httpRequestGatewayMock.Object);
+        _safApiService = new SafGeneralApiService(_httpRequestGatewayMock.Object);
     }
 
     [Fact]

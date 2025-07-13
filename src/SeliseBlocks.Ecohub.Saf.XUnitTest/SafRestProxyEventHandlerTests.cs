@@ -51,6 +51,13 @@ Ew/qPc3drPsq8WkSg98IrHDIcwuVZW+CicO/S1BIOq0AVHX3e6LYpKVaeCeVeECV
 BXEJV0nDz043plwyNj6Y+5zvIbfyXnb3orKNoZ9ft9V5vrkj0bWphCaUVQkkov6s
 /nSOpaKFyo4MfhPJTSDAJkc=
 -----END PRIVATE KEY-----";
+
+    private const string _testEcPrivateKey = @"-----BEGIN PRIVATE KEY-----
+MIG2AgEAMBAGByqGSM49AgEGBSuBBAAiBIGeMIGbAgEBBDA+azu0YbZStedCPKl0
+Q8b2pC6ZossPLEXOlQVfoIpNGLbUPxgRGRTm4cYUjr+EifahZANiAASPZF8HWMUt
+xUH5NOceXyn9yVAO0NLSqH/uLqUepj8ontv9rGwNG/723Lyi753SQGMhpy6kHGz0
+54OUx+a1+6smHXkR4DoFNwGH4P2er6Ffm/gJRoSR8hLNkB4DPzTUXys=
+-----END PRIVATE KEY-----";
     private const string _testAesKey = "MIIBUwIBADANBgkqhkiG9w0BAQEFAASCAT0wggE5AgEAAkEAu6vD4pfDJLCCygmiqGhnRotEmjx2Dx8edcCjfBAeh4QLQhI8paZpaiJSmSgnFkRjUvb8Dhd/GWzlOaqulY+NIQIDAQABAkAxng0RKIyoc55wqjF+EvRTG1kM6jVQdCrKeR8AGwbnTtb/DWyXsnzcO01Ik5TOY1M6+MqhChl3G8PDSJ46RPCtAiEA3RiaPz2y7TiXa6kh/MBn6oiPCP1ZGK2AtZRLPFCZl2sCIQDZTFDbbDCz9QX3lyRUWtpk7d1mHjFTEFEGXW32V2lsowIgPcfnKi7KdcEvhrT/O0pkf0PjfCaXI+8vnQ2wLE11bbsCIHYY1fEK8cU8K4wOZr45ymwEIsm3KxN70K1m5bZ2d2OFAiAvFNT/gmfDGu5p12+SyNh4xhZscLkMC4PSQKTK9/Krkw==";
     public SafRestProxyEventHandlerTests()
     {
@@ -90,7 +97,8 @@ BXEJV0nDz043plwyNj6Y+5zvIbfyXnb3orKNoZ9ft9V5vrkj0bWphCaUVQkkov6s
                 Data = new SafData
                 {
                     Payload = new byte[] { 1, 2, 3 },
-                    PublicKey = _testPublicKey
+                    PublicKey = _testPublicKey,
+                    EcPrivateKey = _testEcPrivateKey
                 }
             }
         };
@@ -148,7 +156,8 @@ BXEJV0nDz043plwyNj6Y+5zvIbfyXnb3orKNoZ9ft9V5vrkj0bWphCaUVQkkov6s
                 Data = new SafData
                 {
                     Payload = new byte[] { 1, 2, 3 },
-                    PublicKey = _testPublicKey
+                    PublicKey = _testPublicKey,
+                    EcPrivateKey = _testEcPrivateKey
                 }
             }
         };
