@@ -11,7 +11,7 @@ public class SafRestProxyEventHandler : ISafRestProxyEventHandler
         _httpRequestGateway = httpRequestGateway;
     }
 
-    public async Task<SafSendOfferNlpiEventResponse> SendOfferNlpiEventAsync(SafSendOfferNlpiEventRequest request)
+    public async Task<SafSendOfferNlpiEventResponse> ProduceEventAsync(SafSendOfferNlpiEventRequest request)
     {
         var validation = request.Validate();
         if (!validation.IsSuccess)
@@ -34,7 +34,7 @@ public class SafRestProxyEventHandler : ISafRestProxyEventHandler
 
         return response.MapToDerivedResponse<SafSendOfferNlpiEvent, SafSendOfferNlpiEventResponse>();
     }
-    public async Task<SafReceiveOfferNlpiEventResponse> ReceiveOfferNlpiEventAsync(SafReceiveOfferNlpiEventRequest request)
+    public async Task<SafReceiveOfferNlpiEventResponse> ConsumeEventAsync(SafReceiveOfferNlpiEventRequest request)
     {
         var validation = request.Validate();
         if (!validation.IsSuccess)

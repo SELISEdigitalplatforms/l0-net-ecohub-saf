@@ -19,8 +19,8 @@ public static class SafDriverConstant
 
     public const string SendOfferNlpiEventEndpoint = "saf/v1/in";
     public const string ReceiveOfferNlpiEventEndpoint = "saf/v1/{ecohubId}/offer/nlpi/out";
-    public const string KafkaProducerTopic = "eh.saf.in";
-    public const string KafkaConsumerTopic = "eh.saf.{ecohubId}.offer.nlpi.out";
+    public const string KafkaProducerTopic = "eh.saf.in.v1";
+    public const string KafkaConsumerTopic = "eh.saf.{ecohubId}.offer.nlpi.out.v1";
     public const string SchemaRegistryUrl = "https://psrc-qrk9d.westeurope.azure.confluent.cloud:443";
     public const string SchemaRegistryAuth = "FCYTB2BG73BWKLZ5:juvZLo3Frvgoqn9Mb5dDJjaXx4NAYf1PwY+k5egoUBEHIYYCnmgzJE/M7uCCYjPv";
 }

@@ -72,7 +72,7 @@ xUH5NOceXyn9yVAO0NLSqH/uLqUepj8ontv9rGwNG/723Lyi753SQGMhpy6kHGz0
         var request = new SafSendOfferNlpiEventRequest(); // Missing required fields
 
         // Act
-        var result = await _safEventService.SendOfferNlpiEventAsync(request);
+        var result = await _safEventService.ProduceEventAsync(request);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -130,7 +130,7 @@ xUH5NOceXyn9yVAO0NLSqH/uLqUepj8ontv9rGwNG/723Lyi753SQGMhpy6kHGz0
             });
 
         // Act
-        var result = await _safEventService.SendOfferNlpiEventAsync(request);
+        var result = await _safEventService.ProduceEventAsync(request);
 
         // Assert
         Assert.NotNull(result);
@@ -175,7 +175,7 @@ xUH5NOceXyn9yVAO0NLSqH/uLqUepj8ontv9rGwNG/723Lyi753SQGMhpy6kHGz0
             });
 
         // Act
-        var result = await _safEventService.SendOfferNlpiEventAsync(request);
+        var result = await _safEventService.ProduceEventAsync(request);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -191,7 +191,7 @@ xUH5NOceXyn9yVAO0NLSqH/uLqUepj8ontv9rGwNG/723Lyi753SQGMhpy6kHGz0
         var request = new SafReceiveOfferNlpiEventRequest(); // Missing required fields
 
         // Act
-        var result = await _safEventService.ReceiveOfferNlpiEventAsync(request);
+        var result = await _safEventService.ConsumeEventAsync(request);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -223,7 +223,7 @@ xUH5NOceXyn9yVAO0NLSqH/uLqUepj8ontv9rGwNG/723Lyi753SQGMhpy6kHGz0
             });
 
         // Act
-        var result = await _safEventService.ReceiveOfferNlpiEventAsync(request);
+        var result = await _safEventService.ConsumeEventAsync(request);
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -285,7 +285,7 @@ xUH5NOceXyn9yVAO0NLSqH/uLqUepj8ontv9rGwNG/723Lyi753SQGMhpy6kHGz0
             });
 
         // Act
-        var result = await _safEventService.ReceiveOfferNlpiEventAsync(request);
+        var result = await _safEventService.ConsumeEventAsync(request);
 
         // Assert
         Assert.True(result.IsSuccess);
@@ -320,7 +320,7 @@ xUH5NOceXyn9yVAO0NLSqH/uLqUepj8ontv9rGwNG/723Lyi753SQGMhpy6kHGz0
             });
 
         // Act
-        var result = await _safEventService.ReceiveOfferNlpiEventAsync(request);
+        var result = await _safEventService.ConsumeEventAsync(request);
 
         // Assert
         Assert.True(result.IsSuccess);

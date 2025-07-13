@@ -32,7 +32,7 @@ public interface ISafRestProxyEventHandler
     ///   </description></item>
     /// </list>
     /// </returns>
-    Task<SafSendOfferNlpiEventResponse> SendOfferNlpiEventAsync(SafSendOfferNlpiEventRequest request);
+    Task<SafSendOfferNlpiEventResponse> ProduceEventAsync(SafSendOfferNlpiEventRequest request);
 
     /// <summary>
     /// Receives and decrypts offer NLPI events from the SAF API.
@@ -55,5 +55,5 @@ public interface ISafRestProxyEventHandler
     /// </list>
     /// </returns>
     /// <exception cref="CryptographicException">When decryption fails</exception>
-    Task<SafReceiveOfferNlpiEventResponse> ReceiveOfferNlpiEventAsync(SafReceiveOfferNlpiEventRequest request);
+    Task<SafReceiveOfferNlpiEventResponse> ConsumeEventAsync(SafReceiveOfferNlpiEventRequest request);
 }
