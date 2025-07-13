@@ -82,71 +82,6 @@ public class HttpRequestGateway : IHttpRequestGateway
 
     #region Private Methods
 
-    // private async Task<SafBaseResponse<TResponse>> GetAsync<TResponse>(
-    //     HttpRequestMessage request,
-    //     Dictionary<string, string>? headers = null,
-    //     string? bearerToken = null)
-    //     where TResponse : class
-    // {
-    //     var response = new SafBaseResponse<TResponse>();
-    //     try
-    //     {
-    //         AddHeaders(request, headers, bearerToken);
-
-    //         var httpResponse = await _httpClient.SendAsync(request);
-
-    //         if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK
-    //                     || httpResponse.StatusCode == System.Net.HttpStatusCode.BadRequest
-    //                     || httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound
-    //                     || httpResponse.StatusCode == System.Net.HttpStatusCode.Unauthorized
-    //                     || httpResponse.StatusCode == System.Net.HttpStatusCode.Forbidden
-    //                     || httpResponse.StatusCode == System.Net.HttpStatusCode.Conflict
-    //                     || httpResponse.StatusCode == System.Net.HttpStatusCode.InternalServerError)
-    //         {
-    //             var responseContent = await httpResponse.Content.ReadAsStringAsync();
-    //             if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)
-    //             {
-    //                 response.IsSuccess = true;
-    //                 response.Data = JsonSerializer.Deserialize<TResponse>(responseContent);
-    //             }
-    //             else
-    //             {
-    //                 response.IsSuccess = false;
-    //                 response.Error = await httpResponse.Content.ReadFromJsonAsync<SafError>();
-    //             }
-    //         }
-
-    //     }
-    //     catch (HttpRequestException ex)
-    //     {
-    //         response.IsSuccess = false;
-    //         response.Error = new SafError
-    //         {
-    //             ErrorMessage = ex.Message,
-    //             ErrorCode = "HTTP request failed"
-    //         };
-    //     }
-    //     catch (JsonException ex)
-    //     {
-    //         response.IsSuccess = false;
-    //         response.Error = new SafError
-    //         {
-    //             ErrorMessage = ex.Message,
-    //             ErrorCode = "Deserialization error"
-    //         };
-    //     }
-    //     catch (Exception ex)
-    //     {
-    //         response.IsSuccess = false;
-    //         response.Error = new SafError
-    //         {
-    //             ErrorMessage = ex.Message,
-    //             ErrorCode = "Unexpected error"
-    //         };
-    //     }
-    //     return response;
-
-    // }
     private async Task<SafBaseResponse<TResponse>> SendAsync<TRequest, TResponse>(
         HttpRequestMessage request,
         TRequest? body,
@@ -157,8 +92,6 @@ public class HttpRequestGateway : IHttpRequestGateway
     where TRequest : class
     where TResponse : class
     {
-
-        // var response = (TResponse)Activator.CreateInstance<TResponse>();
         var response = new SafBaseResponse<TResponse>();
         try
         {
@@ -174,7 +107,13 @@ public class HttpRequestGateway : IHttpRequestGateway
             else if (body is not null && contentType == "application/json")
             {
                 request.Content = new StringContent(
-                    JsonSerializer.Serialize(body),
+                    Newtonsoft.Json.JsonConvert.SerializeObject(
+                        body,
+                        new Newtonsoft.Json.JsonSerializerSettings
+                        {
+                            ContractResolver = new Newtonsoft.Json.Serialization.DefaultContractResolver()
+                        }
+                    ),
                     Encoding.UTF8,
                     "application/json"
                 );
@@ -185,7 +124,8 @@ public class HttpRequestGateway : IHttpRequestGateway
             || httpResponse.StatusCode == System.Net.HttpStatusCode.BadRequest
             || httpResponse.StatusCode == System.Net.HttpStatusCode.NotFound
             || httpResponse.StatusCode == System.Net.HttpStatusCode.InternalServerError
-            || httpResponse.StatusCode == System.Net.HttpStatusCode.Conflict)
+            || httpResponse.StatusCode == System.Net.HttpStatusCode.Conflict
+            || httpResponse.StatusCode == System.Net.HttpStatusCode.UnprocessableContent)
             {
                 var responseContent = await httpResponse.Content.ReadAsStringAsync();
                 if (httpResponse.StatusCode == System.Net.HttpStatusCode.OK)

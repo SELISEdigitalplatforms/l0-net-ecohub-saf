@@ -26,7 +26,8 @@ public static class SafOfferNlpiEventMapper
             ProcessStatus = eventPayload.ProcessStatus,
             SubProcessName = eventPayload.SubProcessName,
             ProcessName = eventPayload.ProcessName,
-            SubProcessStatus = eventPayload.SubProcessStatus
+            SubProcessStatus = eventPayload.SubProcessStatus,
+            ProcessVersion = eventPayload.ProcessVersion
         };
     }
 
