@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace SeliseBlocks.Ecohub.Saf;
 
@@ -17,6 +17,6 @@ public class SafMemberVerifyDecryptedKeyRequest
 public class SafMemberVerifyDecryptedKeyRequestPayload
 {
     [Required(ErrorMessage = "VerifiedContent is required")]
-    [JsonPropertyName("verifiedContent")]
+    [JsonProperty("verifiedContent")]
     public string VerifiedContent { get; set; } = string.Empty;
 }
