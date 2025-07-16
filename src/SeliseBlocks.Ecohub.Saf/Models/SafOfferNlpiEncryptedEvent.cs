@@ -13,11 +13,8 @@ public class SafEncryptedData
     [JsonProperty("payload", NullValueHandling = NullValueHandling.Ignore)]
     public string Payload { get; set; }
 
-    [JsonProperty("md5PayloadHash", NullValueHandling = NullValueHandling.Ignore)]
-    public string Md5PayloadHash { get; set; }
-
     [JsonProperty("links", NullValueHandling = NullValueHandling.Ignore)]
-    public List<SafLinks> Links { get; set; }
+    public List<SafLink> Links { get; set; }
 
     [JsonProperty("encryptionKey", NullValueHandling = NullValueHandling.Ignore)]
     public string EncryptionKey { get; set; }
@@ -25,9 +22,9 @@ public class SafEncryptedData
     [JsonProperty("publicKeyVersion", NullValueHandling = NullValueHandling.Ignore)]
     public string PublicKeyVersion { get; set; }
 
-    [JsonProperty("message", NullValueHandling = NullValueHandling.Ignore)]
-    public string Message { get; set; }
+    [JsonProperty("payloadSignature", NullValueHandling = NullValueHandling.Ignore)]
+    public string PayloadSignature { get; set; }
+    [JsonProperty("signatureKeyVersion", NullValueHandling = NullValueHandling.Ignore)]
+    public string SignatureKeyVersion { get; set; }
 
-    [JsonProperty("md5MessageHash", NullValueHandling = NullValueHandling.Ignore)]
-    public string Md5MessageHash { get; set; }
 }
