@@ -20,6 +20,11 @@ public static class SafBaseResponseMapper
         where TModel : class
         where TResponse : SafBaseResponse<IEnumerable<TModel>>, new()
     {
+        if (baseResponse == null)
+        {
+            throw new ArgumentNullException(nameof(baseResponse), "Base response cannot be null");
+        }
+
         return new TResponse
         {
             IsSuccess = baseResponse.IsSuccess,

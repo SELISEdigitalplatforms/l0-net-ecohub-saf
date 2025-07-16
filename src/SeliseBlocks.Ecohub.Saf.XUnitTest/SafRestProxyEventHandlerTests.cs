@@ -268,7 +268,7 @@ xUH5NOceXyn9yVAO0NLSqH/uLqUepj8ontv9rGwNG/723Lyi753SQGMhpy6kHGz0
                     Payload = encryptedPayloadBase64, // <-- Use AES-encrypted payload
                     EncryptionKey = encryptedAesKeyBase64, // <-- Use RSA-encrypted AES key
                     PublicKeyVersion = "1.0",
-                    Links = new List<SafLinks>()
+                    //Links = new List<SafLinks>()
                 }
             }
         };

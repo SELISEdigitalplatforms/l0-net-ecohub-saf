@@ -33,17 +33,37 @@ public class SafPkiApiServiceTests
                 new SafMemberPublicKeyUploadRequestPayload { Key = "key", Version = "v1", ExpireInDays = "365" }
             }
         };
-        var safBaseResponse = new SafBaseResponse<IEnumerable<SafMemberPublicKey>>
+
+        var mockedApiResponse = new SafBaseResponse<IEnumerable<SafMemberPublicKey>>
         {
             IsSuccess = true,
-            Data = new List<SafMemberPublicKey> { new SafMemberPublicKey { KeyId = "kid", Key = "key" } }
+            Data = new List<SafMemberPublicKey>
+            {
+                new SafMemberPublicKey
+                {
+                    KeyId = "kid",
+                    Key = "key"
+                }
+            },
+            Error = null
         };
-        _httpRequestGatewayMock.Setup(x => x.PostAsync<IEnumerable<SafMemberPublicKeyUploadRequestPayload>, IEnumerable<SafMemberPublicKey>>(
-            It.IsAny<string>(), It.IsAny<IEnumerable<SafMemberPublicKeyUploadRequestPayload>>(), null, request.BearerToken, null))
-            .ReturnsAsync(safBaseResponse);
+
+        _httpRequestGatewayMock
+            .Setup(x => x.PostAsync<IEnumerable<SafMemberPublicKeyUploadRequestPayload>, IEnumerable<SafMemberPublicKey>>(
+                It.IsAny<string>(),
+                It.IsAny<IEnumerable<SafMemberPublicKeyUploadRequestPayload>>(),
+                null,
+                It.IsAny<string>(),
+                It.IsAny<string>()))
+            .ReturnsAsync(mockedApiResponse);
+
         var result = await _service.UploadMemberPublicKey(request);
+
+        Assert.NotNull(result);
         Assert.True(result.IsSuccess);
         Assert.NotNull(result.Data);
+        Assert.Single(result.Data);
+        Assert.Equal("kid", result.Data.First().KeyId);
     }
 
     [Fact]
