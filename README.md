@@ -5,7 +5,7 @@
 
 ## Overview
 
-`SeliseBlocks.Ecohub.SAF` is a .NET library for integrating with the SAF (Secure Access Facility) platform. It provides comprehensive services for:
+`SeliseBlocks.Ecohub.SAF` is a .NET library for integrating with the SAF (Standard API Framework) platform. It provides comprehensive services for:
 
 - Authentication and token management
 - Public key operations
