@@ -52,11 +52,13 @@ public class BaseSafOfferNlpiEvent
 
     [JsonProperty("processName", NullValueHandling = NullValueHandling.Ignore)]
     public string ProcessName { get; set; }
+    [JsonProperty("processVersion", NullValueHandling = NullValueHandling.Ignore)]
+    public string ProcessVersion { get; set; }
 
     [JsonProperty("subProcessStatus", NullValueHandling = NullValueHandling.Ignore)]
     public string SubProcessStatus { get; set; }
 }
-public class SafLinks
+public class SafLink
 {
     [JsonProperty("href", NullValueHandling = NullValueHandling.Ignore)]
     public string Href { get; set; }

@@ -12,4 +12,6 @@ public class SafBearerToken
     public int ExpiresIn { get; set; }
     [JsonPropertyName("ext_expires_in")]
     public int ExtExpiresIn { get; set; }
+    [JsonPropertyName("supportedProcesses")]
+    public IEnumerable<SafSupportedProcess> SupportedProcesses { get; set; } = [];
 }

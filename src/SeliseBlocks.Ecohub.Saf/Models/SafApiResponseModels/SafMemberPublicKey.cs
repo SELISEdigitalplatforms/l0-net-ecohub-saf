@@ -2,6 +2,7 @@ namespace SeliseBlocks.Ecohub.Saf;
 
 public class SafMemberPublicKey
 {
+    public string KeyType { get; set; }
     public string KeyId { get; set; }
     public string MembershipId { get; set; }
     public string Version { get; set; }
@@ -11,4 +12,5 @@ public class SafMemberPublicKey
     public DateTime ActivatedAt { get; set; }
     public DateTime ExpiryDate { get; set; }
     public string EcoHubStatus { get; set; }
+    public IEnumerable<SafSupportedProcess> SupportedProcesses { get; set; } = [];
 }

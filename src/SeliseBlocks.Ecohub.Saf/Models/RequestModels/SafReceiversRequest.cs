@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace SeliseBlocks.Ecohub.Saf;
 
@@ -13,19 +14,19 @@ public class SafReceiversRequest
 public class SafReceiversRequestPayload
 {
     [Required(ErrorMessage = "LicenceKey is required")]
-    [JsonPropertyName("licenceKey")]
+    [JsonProperty("licenceKey")]
     public string LicenceKey { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Password is required")]
-    [JsonPropertyName("password")]
+    [JsonProperty("password")]
     public string Password { get; set; } = string.Empty;
 
-    [JsonPropertyName("requestId")]
+    [JsonProperty("requestId")]
     public string RequestId { get; set; } = string.Empty;
-    [JsonPropertyName("requestTime")]
+    [JsonProperty("requestTime")]
     public string RequestTime { get; set; } = string.Empty;
 
-    [JsonPropertyName("UserAgent")]
+    [JsonProperty("userAgent")]
     public SafUserAgent UserAgent { get; set; }
 
 }

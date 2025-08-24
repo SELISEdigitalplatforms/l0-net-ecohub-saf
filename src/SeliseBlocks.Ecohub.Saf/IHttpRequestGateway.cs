@@ -16,6 +16,14 @@ public interface IHttpRequestGateway
     , string? contentType = "application/json")
     where TRequest : class
     where TResponse : class;
+
+    Task<SafBaseResponse<TResponse>> DeleteAsync<TRequest, TResponse>(string endpoint
+    , TRequest? requestBody
+    , Dictionary<string, string>? headers = null
+    , string? bearerToken = null
+    , string? contentType = "application/json")
+    where TRequest : class
+    where TResponse : class;
     Task<SafBaseResponse<TResponse>> GetAsync<TResponse>(string endpoint
     , Dictionary<string, string>? headers = null
     , string? bearerToken = null)
